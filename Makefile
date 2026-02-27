@@ -15,69 +15,69 @@ GOFLAGS     := -trimpath
 
 .PHONY: all build build-all install clean test test-verbose test-cover lint fmt vet tidy run help
 
-## ─── Default ───────────────────────────────────────────
+## ─── デフォルト ────────────────────────────────────────
 
-all: build  ## Build the binary (default)
+all: build  ## バイナリをビルド（デフォルト）
 
-## ─── Build ─────────────────────────────────────────────
+## ─── ビルド ────────────────────────────────────────────
 
-build:  ## Build for current platform
+build:  ## 現在のプラットフォーム向けにビルド
 	$(GO) build $(GOFLAGS) -ldflags "$(LDFLAGS)" -o $(DIST_DIR)/$(BINARY_NAME) $(CMD_DIR)
-	@echo "Built: $(DIST_DIR)/$(BINARY_NAME)"
+	@echo "ビルド完了: $(DIST_DIR)/$(BINARY_NAME)"
 
-build-all: clean  ## Cross-compile for all platforms
+build-all: clean  ## 全プラットフォーム向けにクロスコンパイル
 	GOOS=darwin  GOARCH=arm64 $(GO) build $(GOFLAGS) -ldflags "$(LDFLAGS)" -o $(DIST_DIR)/$(BINARY_NAME)-darwin-arm64  $(CMD_DIR)
 	GOOS=darwin  GOARCH=amd64 $(GO) build $(GOFLAGS) -ldflags "$(LDFLAGS)" -o $(DIST_DIR)/$(BINARY_NAME)-darwin-amd64  $(CMD_DIR)
 	GOOS=linux   GOARCH=amd64 $(GO) build $(GOFLAGS) -ldflags "$(LDFLAGS)" -o $(DIST_DIR)/$(BINARY_NAME)-linux-amd64   $(CMD_DIR)
 	GOOS=linux   GOARCH=arm64 $(GO) build $(GOFLAGS) -ldflags "$(LDFLAGS)" -o $(DIST_DIR)/$(BINARY_NAME)-linux-arm64   $(CMD_DIR)
-	@echo "Cross-compilation complete. Binaries in $(DIST_DIR)/"
+	@echo "クロスコンパイル完了。バイナリは $(DIST_DIR)/ にあります"
 
-install: build  ## Install to $GOPATH/bin
+install: build  ## $GOPATH/bin にインストール
 	cp $(DIST_DIR)/$(BINARY_NAME) $(GOPATH)/bin/$(BINARY_NAME)
-	@echo "Installed to $(GOPATH)/bin/$(BINARY_NAME)"
+	@echo "インストール完了: $(GOPATH)/bin/$(BINARY_NAME)"
 
-## ─── Test ──────────────────────────────────────────────
+## ─── テスト ────────────────────────────────────────────
 
-test:  ## Run tests
+test:  ## テストを実行
 	$(GO) test ./...
 
-test-verbose:  ## Run tests with verbose output
+test-verbose:  ## 詳細出力でテストを実行
 	$(GO) test -v ./...
 
-test-cover:  ## Run tests with coverage report
+test-cover:  ## カバレッジレポート付きでテストを実行
 	$(GO) test -coverprofile=coverage.out ./...
 	$(GO) tool cover -func=coverage.out
-	@echo "HTML report: go tool cover -html=coverage.out"
+	@echo "HTMLレポート: go tool cover -html=coverage.out"
 
-## ─── Quality ───────────────────────────────────────────
+## ─── 品質 ──────────────────────────────────────────────
 
-lint:  ## Run golangci-lint (install: go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest)
-	@which golangci-lint > /dev/null 2>&1 || (echo "golangci-lint not found. Install: go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest" && exit 1)
+lint:  ## golangci-lint を実行（インストール: go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest）
+	@which golangci-lint > /dev/null 2>&1 || (echo "golangci-lint が見つかりません。インストール: go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest" && exit 1)
 	golangci-lint run ./...
 
-fmt:  ## Format code
+fmt:  ## コードをフォーマット
 	$(GO) fmt ./...
 
-vet:  ## Run go vet
+vet:  ## go vet を実行
 	$(GO) vet ./...
 
-tidy:  ## Tidy and verify dependencies
+tidy:  ## 依存関係を整理・検証
 	$(GO) mod tidy
 	$(GO) mod verify
 
-## ─── Run ───────────────────────────────────────────────
+## ─── 実行 ──────────────────────────────────────────────
 
-run: build  ## Build and run with arguments (e.g., make run ARGS="ls")
+run: build  ## ビルドして引数付きで実行（例: make run ARGS="ls"）
 	$(DIST_DIR)/$(BINARY_NAME) $(ARGS)
 
-## ─── Clean ─────────────────────────────────────────────
+## ─── クリーン ──────────────────────────────────────────
 
-clean:  ## Remove build artifacts
+clean:  ## ビルド成果物を削除
 	rm -rf $(DIST_DIR)
 	rm -f coverage.out
 
-## ─── Help ──────────────────────────────────────────────
+## ─── ヘルプ ────────────────────────────────────────────
 
-help:  ## Show this help
+help:  ## このヘルプを表示
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
 		awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}'

@@ -18,33 +18,33 @@ func setupTestManager(t *testing.T) *Manager {
 func TestManager_LoadSave(t *testing.T) {
 	m := setupTestManager(t)
 
-	// Load empty state.
+	// 空の状態を読み込む。
 	s, err := m.Load()
 	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+		t.Fatalf("予期しないエラー: %v", err)
 	}
 	if s.ProxyPort != 1355 {
-		t.Errorf("expected default proxy port 1355, got %d", s.ProxyPort)
+		t.Errorf("デフォルトプロキシポート 1355 を期待したが %d を取得", s.ProxyPort)
 	}
 	if len(s.Routes) != 0 {
-		t.Errorf("expected no routes, got %d", len(s.Routes))
+		t.Errorf("ルート 0件を期待したが %d 件を取得", len(s.Routes))
 	}
 
-	// Save and reload.
+	// 保存して再読み込みする。
 	s.Routes = []Route{{Hostname: "test.localhost", HostPort: 40001}}
 	if err := m.Save(s); err != nil {
-		t.Fatalf("save error: %v", err)
+		t.Fatalf("保存エラー: %v", err)
 	}
 
 	s2, err := m.Load()
 	if err != nil {
-		t.Fatalf("reload error: %v", err)
+		t.Fatalf("再読み込みエラー: %v", err)
 	}
 	if len(s2.Routes) != 1 {
-		t.Fatalf("expected 1 route, got %d", len(s2.Routes))
+		t.Fatalf("1ルートを期待したが %d を取得", len(s2.Routes))
 	}
 	if s2.Routes[0].Hostname != "test.localhost" {
-		t.Errorf("expected test.localhost, got %s", s2.Routes[0].Hostname)
+		t.Errorf("test.localhost を期待したが %s を取得", s2.Routes[0].Hostname)
 	}
 }
 
@@ -57,15 +57,15 @@ func TestManager_RegisterRoutes(t *testing.T) {
 	}
 
 	if err := m.RegisterRoutes(routes); err != nil {
-		t.Fatalf("register error: %v", err)
+		t.Fatalf("登録エラー: %v", err)
 	}
 
 	all, err := m.GetAllRoutes()
 	if err != nil {
-		t.Fatalf("get all error: %v", err)
+		t.Fatalf("全ルート取得エラー: %v", err)
 	}
 	if len(all) != 2 {
-		t.Fatalf("expected 2 routes, got %d", len(all))
+		t.Fatalf("2ルートを期待したが %d を取得", len(all))
 	}
 }
 
@@ -76,7 +76,7 @@ func TestManager_HostnameConflict(t *testing.T) {
 		{Hostname: "frontend.localhost", HostPort: 40001, Directory: "/project-a"},
 	}
 	if err := m.RegisterRoutes(routes1); err != nil {
-		t.Fatalf("register error: %v", err)
+		t.Fatalf("登録エラー: %v", err)
 	}
 
 	routes2 := []Route{
@@ -84,7 +84,7 @@ func TestManager_HostnameConflict(t *testing.T) {
 	}
 	err := m.RegisterRoutes(routes2)
 	if err == nil {
-		t.Fatal("expected hostname conflict error")
+		t.Fatal("ホスト名競合エラーを期待")
 	}
 }
 
@@ -95,25 +95,25 @@ func TestManager_OverwriteSameDirectory(t *testing.T) {
 		{Hostname: "frontend.localhost", HostPort: 40001, Directory: "/project-a"},
 	}
 	if err := m.RegisterRoutes(routes1); err != nil {
-		t.Fatalf("register error: %v", err)
+		t.Fatalf("登録エラー: %v", err)
 	}
 
 	routes2 := []Route{
 		{Hostname: "frontend.localhost", HostPort: 40099, Directory: "/project-a"},
 	}
 	if err := m.RegisterRoutes(routes2); err != nil {
-		t.Fatalf("overwrite error: %v", err)
+		t.Fatalf("上書きエラー: %v", err)
 	}
 
 	all, err := m.GetAllRoutes()
 	if err != nil {
-		t.Fatalf("get all error: %v", err)
+		t.Fatalf("全ルート取得エラー: %v", err)
 	}
 	if len(all) != 1 {
-		t.Fatalf("expected 1 route, got %d", len(all))
+		t.Fatalf("1ルートを期待したが %d を取得", len(all))
 	}
 	if all[0].HostPort != 40099 {
-		t.Errorf("expected port 40099, got %d", all[0].HostPort)
+		t.Errorf("ポート 40099 を期待したが %d を取得", all[0].HostPort)
 	}
 }
 
@@ -128,15 +128,15 @@ func TestManager_UnregisterRoutes(t *testing.T) {
 
 	removed, err := m.UnregisterRoutes("/project-a")
 	if err != nil {
-		t.Fatalf("unregister error: %v", err)
+		t.Fatalf("登録解除エラー: %v", err)
 	}
 	if len(removed) != 2 {
-		t.Errorf("expected 2 removed, got %d", len(removed))
+		t.Errorf("2件の削除を期待したが %d を取得", len(removed))
 	}
 
 	has, _ := m.HasRoutes()
 	if has {
-		t.Error("expected no routes remaining")
+		t.Error("ルートが残っていないことを期待")
 	}
 }
 
@@ -147,18 +147,18 @@ func TestFileLock(t *testing.T) {
 	fl := NewFileLock(dir)
 
 	if err := fl.Lock(); err != nil {
-		t.Fatalf("lock error: %v", err)
+		t.Fatalf("ロックエラー: %v", err)
 	}
 
 	if _, err := os.Stat(lockDir); os.IsNotExist(err) {
-		t.Error("lock directory should exist")
+		t.Error("ロックディレクトリが存在するべき")
 	}
 
 	if err := fl.Unlock(); err != nil {
-		t.Fatalf("unlock error: %v", err)
+		t.Fatalf("アンロックエラー: %v", err)
 	}
 
 	if _, err := os.Stat(lockDir); !os.IsNotExist(err) {
-		t.Error("lock directory should be removed")
+		t.Error("ロックディレクトリが削除されているべき")
 	}
 }

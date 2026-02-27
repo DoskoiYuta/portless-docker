@@ -9,117 +9,117 @@ import (
 )
 
 var (
-	// Version is set at build time.
+	// Version はビルド時に設定される。
 	Version = "dev"
-	// Commit is set at build time.
+	// Commit はビルド時に設定される。
 	Commit = "none"
 
-	// Global flags
+	// グローバルフラグ
 	proxyPort      int
 	composeFile    string
 	ignoreServices string
 )
 
-// NewRootCmd creates the root cobra command.
+// NewRootCmd はルートのCobraコマンドを作成する。
 func NewRootCmd() *cobra.Command {
 	rootCmd := &cobra.Command{
 		Use:   "portless-docker",
-		Short: "Docker Compose .localhost subdomain router",
-		Long: `portless-docker automatically detects port mappings from docker-compose.yml,
-assigns dynamic host ports, and routes traffic via .localhost subdomains.
+		Short: "Docker Compose の .localhost サブドメインルーター",
+		Long: `portless-docker は docker-compose.yml からポートマッピングを自動検出し、
+動的ホストポートを割り当て、.localhost サブドメイン経由でトラフィックをルーティングします。
 
-No config files needed. Just use "portless-docker" instead of "docker compose".`,
+設定ファイル不要。"docker compose" の代わりに "portless-docker" を使うだけです。`,
 		Version:            fmt.Sprintf("%s (commit: %s)", Version, Commit),
 		SilenceUsage:       true,
 		SilenceErrors:      true,
 		DisableFlagParsing: false,
-		// Don't show errors for unknown subcommands — they get passed through.
+		// 未知のサブコマンドに対してエラーを表示しない — パススルーで処理される。
 		FParseErrWhitelist: cobra.FParseErrWhitelist{
 			UnknownFlags: true,
 		},
 	}
 
-	// Global flags
-	rootCmd.PersistentFlags().IntVarP(&proxyPort, "port", "p", 1355, "Proxy listen port")
-	rootCmd.PersistentFlags().StringVarP(&composeFile, "file", "f", "", "Path to compose file")
-	rootCmd.PersistentFlags().StringVar(&ignoreServices, "ignore", "", "Services to ignore (comma-separated)")
+	// グローバルフラグ
+	rootCmd.PersistentFlags().IntVarP(&proxyPort, "port", "p", 1355, "プロキシのリッスンポート")
+	rootCmd.PersistentFlags().StringVarP(&composeFile, "file", "f", "", "Composeファイルのパス")
+	rootCmd.PersistentFlags().StringVar(&ignoreServices, "ignore", "", "無視するサービス（カンマ区切り）")
 
-	// Register known subcommands.
+	// 既知のサブコマンドを登録する。
 	rootCmd.AddCommand(newLsCmd())
 	rootCmd.AddCommand(newStopCmd())
 	rootCmd.AddCommand(newProxyCmd())
 
-	// Set RunE on root to handle passthrough for unknown subcommands.
+	// 未知のサブコマンドのパススルーを処理するため RunE を設定する。
 	rootCmd.RunE = func(cmd *cobra.Command, args []string) error {
 		if len(args) == 0 {
 			return cmd.Help()
 		}
-		// This shouldn't happen since passthrough catches args below.
-		return fmt.Errorf("unknown command: %s", args[0])
+		// パススルーが以下で引数をキャッチするため、ここには到達しないはず。
+		return fmt.Errorf("不明なコマンド: %s", args[0])
 	}
 
-	// Override the default behavior for unknown subcommands.
-	// Cobra calls this when it doesn't match a subcommand.
+	// 未知のサブコマンドに対するデフォルト動作をオーバーライドする。
+	// Cobraはサブコマンドに一致しない場合にこれを呼び出す。
 	rootCmd.SetFlagErrorFunc(func(cmd *cobra.Command, err error) error {
-		// Allow unknown flags to pass through.
+		// 未知のフラグをパススルーさせる。
 		return nil
 	})
 
 	return rootCmd
 }
 
-// Execute runs the CLI application.
+// Execute はCLIアプリケーションを実行する。
 func Execute() {
 	rootCmd := NewRootCmd()
 
-	// Check if the first non-flag arg is a known subcommand.
-	// If not, treat everything as a passthrough to docker compose.
+	// 最初の非フラグ引数が既知のサブコマンドかどうかを確認する。
+	// そうでない場合、すべてを docker compose へのパススルーとして扱う。
 	args := os.Args[1:]
 	if shouldPassthrough(rootCmd, args) {
-		// Extract our global flags first, then passthrough the rest.
+		// まずグローバルフラグを抽出し、残りをパススルーする。
 		globalFlags, passthroughArgs := splitGlobalFlags(args)
 		os.Args = append([]string{os.Args[0], "__passthrough"}, append(globalFlags, "--")...)
 		os.Args = append(os.Args, passthroughArgs...)
 
-		// Add the passthrough command.
+		// パススルーコマンドを追加する。
 		rootCmd.AddCommand(newPassthroughCmd())
 	} else {
-		// For known commands, add passthrough too in case it's needed.
+		// 既知のコマンドの場合もパススルーを追加する（必要に応じて）。
 		rootCmd.AddCommand(newPassthroughCmd())
 	}
 
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %s\n", err)
+		fmt.Fprintf(os.Stderr, "エラー: %s\n", err)
 		os.Exit(1)
 	}
 }
 
-// shouldPassthrough checks if the arguments should be passed through to docker compose.
+// shouldPassthrough は引数を docker compose にパススルーすべきかどうかを判定する。
 func shouldPassthrough(rootCmd *cobra.Command, args []string) bool {
 	if len(args) == 0 {
 		return false
 	}
 
-	// Find the first non-flag argument.
+	// 最初の非フラグ引数を見つける。
 	subcmd := findSubcommand(args)
 	if subcmd == "" {
 		return false
 	}
 
-	// Known commands handled natively.
+	// ネイティブに処理される既知のコマンド。
 	knownCmds := map[string]bool{
-		"ls":             true,
-		"stop":           true,
-		"__passthrough":  true,
-		"__proxy":        true,
-		"help":           true,
-		"completion":     true,
+		"ls":            true,
+		"stop":          true,
+		"__passthrough": true,
+		"__proxy":       true,
+		"help":          true,
+		"completion":    true,
 	}
 
 	return !knownCmds[subcmd]
 }
 
-// findSubcommand finds the first non-flag argument.
+// findSubcommand は最初の非フラグ引数を見つける。
 func findSubcommand(args []string) string {
 	skipNext := false
 	for _, arg := range args {
@@ -131,7 +131,7 @@ func findSubcommand(args []string) string {
 			return ""
 		}
 		if strings.HasPrefix(arg, "-") {
-			// Check if this flag takes a value.
+			// このフラグが値を取るかどうかを確認する。
 			if arg == "-p" || arg == "--port" || arg == "-f" || arg == "--file" || arg == "--ignore" {
 				skipNext = true
 			}
@@ -142,7 +142,7 @@ func findSubcommand(args []string) string {
 	return ""
 }
 
-// splitGlobalFlags separates our global flags from passthrough arguments.
+// splitGlobalFlags はグローバルフラグとパススルー引数を分離する。
 func splitGlobalFlags(args []string) (globalFlags, passthroughArgs []string) {
 	skipNext := false
 	foundSubcmd := false
@@ -175,7 +175,7 @@ func splitGlobalFlags(args []string) (globalFlags, passthroughArgs []string) {
 			continue
 		}
 
-		// First non-flag arg is the subcommand.
+		// 最初の非フラグ引数がサブコマンド。
 		foundSubcmd = true
 		passthroughArgs = append(passthroughArgs, args[i:]...)
 		break
@@ -184,7 +184,7 @@ func splitGlobalFlags(args []string) (globalFlags, passthroughArgs []string) {
 	return globalFlags, passthroughArgs
 }
 
-// getIgnoredServices parses the --ignore flag into a set.
+// getIgnoredServices は --ignore フラグをセットにパースする。
 func getIgnoredServices() map[string]bool {
 	if ignoreServices == "" {
 		return nil

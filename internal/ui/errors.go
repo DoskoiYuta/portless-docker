@@ -6,31 +6,31 @@ import (
 	"os/exec"
 )
 
-// CheckDockerCompose verifies that docker compose is available.
+// CheckDockerCompose は docker compose が利用可能かどうかを確認する。
 func CheckDockerCompose() error {
 	_, err := exec.LookPath("docker")
 	if err != nil {
-		return fmt.Errorf("docker compose is not installed or not in PATH.")
+		return fmt.Errorf("docker compose がインストールされていないか PATH に含まれていません。")
 	}
 
-	// Check that 'docker compose' subcommand works.
+	// 'docker compose' サブコマンドが動作するか確認する。
 	cmd := exec.Command("docker", "compose", "version")
 	cmd.Stdout = nil
 	cmd.Stderr = nil
 	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("docker compose is not installed or not in PATH.")
+		return fmt.Errorf("docker compose がインストールされていないか PATH に含まれていません。")
 	}
 
 	return nil
 }
 
-// Fatal prints an error and exits with code 1.
+// Fatal はエラーメッセージを表示して終了コード1で終了する。
 func Fatal(msg string) {
 	PrintError(msg)
 	os.Exit(1)
 }
 
-// FatalErr prints an error from an error value and exits with code 1.
+// FatalErr はエラー値からエラーメッセージを表示して終了コード1で終了する。
 func FatalErr(err error) {
 	PrintError(err.Error())
 	os.Exit(1)

@@ -9,19 +9,19 @@ func TestAllocator_Allocate(t *testing.T) {
 
 	port, err := a.Allocate()
 	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+		t.Fatalf("予期しないエラー: %v", err)
 	}
 	if port < MinPort || port > MaxPort {
-		t.Errorf("port %d out of range [%d, %d]", port, MinPort, MaxPort)
+		t.Errorf("ポート %d が範囲 [%d, %d] 外", port, MinPort, MaxPort)
 	}
 
-	// Second allocation should return a different port.
+	// 2回目の割り当ては異なるポートを返すべき。
 	port2, err := a.Allocate()
 	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+		t.Fatalf("予期しないエラー: %v", err)
 	}
 	if port2 == port {
-		t.Errorf("expected different port, got same: %d", port2)
+		t.Errorf("異なるポートを期待したが同じポートを取得: %d", port2)
 	}
 }
 
@@ -31,9 +31,9 @@ func TestAllocator_WithUsedPorts(t *testing.T) {
 
 	port, err := a.Allocate()
 	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+		t.Fatalf("予期しないエラー: %v", err)
 	}
 	if port == 40000 || port == 40001 || port == 40002 {
-		t.Errorf("allocated port %d that should be marked as used", port)
+		t.Errorf("使用済みとしてマークされたポート %d が割り当てられた", port)
 	}
 }

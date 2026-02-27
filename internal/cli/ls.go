@@ -10,7 +10,7 @@ import (
 func newLsCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "ls",
-		Short: "List all active routes across all projects",
+		Short: "全プロジェクトのアクティブルートを一覧表示",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			sm, err := state.NewManager()
 			if err != nil {

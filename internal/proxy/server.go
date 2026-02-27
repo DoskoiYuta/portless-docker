@@ -14,18 +14,18 @@ import (
 )
 
 const (
-	// SelfCheckInterval is how often the proxy checks for remaining routes.
+	// SelfCheckInterval はプロキシが残存ルートを確認する間隔。
 	SelfCheckInterval = 30 * time.Second
 )
 
-// Server is the portless-docker reverse proxy server.
+// Server は portless-docker のリバースプロキシサーバー。
 type Server struct {
 	port         int
 	stateManager *state.Manager
 	httpServer   *http.Server
 }
 
-// NewServer creates a new proxy server.
+// NewServer は新しいプロキシサーバーを作成する。
 func NewServer(port int, sm *state.Manager) *Server {
 	handler := NewHandler(sm)
 	return &Server{
@@ -41,49 +41,49 @@ func NewServer(port int, sm *state.Manager) *Server {
 	}
 }
 
-// Run starts the proxy server and blocks until shutdown.
+// Run はプロキシサーバーを起動し、シャットダウンまでブロックする。
 func (s *Server) Run() error {
-	// Set up signal handling.
+	// シグナルハンドリングを設定する。
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
 
-	// Start self-check goroutine.
+	// セルフチェック用のゴルーチンを起動する。
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	go s.selfCheck(ctx)
 
-	// Start serving.
+	// サーバーを起動する。
 	errCh := make(chan error, 1)
 	go func() {
-		log.Printf("Proxy listening on :%d", s.port)
+		log.Printf("プロキシが :%d でリッスン中", s.port)
 		if err := s.httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			errCh <- err
 		}
 	}()
 
-	// Wait for signal or error.
+	// シグナルまたはエラーを待機する。
 	select {
 	case sig := <-sigCh:
-		log.Printf("Received signal %v, shutting down", sig)
+		log.Printf("シグナル %v を受信、シャットダウンします", sig)
 	case err := <-errCh:
-		return fmt.Errorf("server error: %w", err)
+		return fmt.Errorf("サーバーエラー: %w", err)
 	}
 
-	// Graceful shutdown.
+	// グレースフルシャットダウン。
 	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer shutdownCancel()
 	return s.httpServer.Shutdown(shutdownCtx)
 }
 
-// Shutdown gracefully stops the server.
+// Shutdown はサーバーをグレースフルに停止する。
 func (s *Server) Shutdown() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	return s.httpServer.Shutdown(ctx)
 }
 
-// selfCheck periodically checks if there are remaining routes.
-// If no routes remain, the server shuts down.
+// selfCheck は定期的に残存ルートがあるか確認する。
+// ルートが残っていない場合、サーバーをシャットダウンする。
 func (s *Server) selfCheck(ctx context.Context) {
 	ticker := time.NewTicker(SelfCheckInterval)
 	defer ticker.Stop()
@@ -95,11 +95,11 @@ func (s *Server) selfCheck(ctx context.Context) {
 		case <-ticker.C:
 			has, err := s.stateManager.HasRoutes()
 			if err != nil {
-				log.Printf("Self-check error: %v", err)
+				log.Printf("セルフチェックエラー: %v", err)
 				continue
 			}
 			if !has {
-				log.Println("No routes remaining. Proxy shutting down.")
+				log.Println("残存ルートなし。プロキシをシャットダウンします。")
 				s.Shutdown()
 				return
 			}

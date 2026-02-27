@@ -14,60 +14,60 @@ const (
 	staleDuration = 10 * time.Second
 )
 
-// FileLock provides mkdir-based file locking.
+// FileLock は mkdir ベースのファイルロックを提供する。
 type FileLock struct {
 	dir string
 }
 
-// NewFileLock creates a new file lock in the given base directory.
+// NewFileLock は指定ベースディレクトリ内に新しいファイルロックを作成する。
 func NewFileLock(baseDir string) *FileLock {
 	return &FileLock{
 		dir: filepath.Join(baseDir, lockDirName),
 	}
 }
 
-// Lock acquires the file lock with timeout and stale detection.
+// Lock はタイムアウトと失効検出付きでファイルロックを取得する。
 func (fl *FileLock) Lock() error {
 	deadline := time.Now().Add(lockTimeout)
 
 	for {
 		err := os.Mkdir(fl.dir, 0755)
 		if err == nil {
-			// Write a timestamp file for stale detection.
+			// 失効検出用のタイムスタンプファイルを書き込む。
 			ts := filepath.Join(fl.dir, "ts")
 			os.WriteFile(ts, []byte(time.Now().Format(time.RFC3339Nano)), 0644)
 			return nil
 		}
 
 		if !os.IsExist(err) {
-			return fmt.Errorf("failed to create lock: %w", err)
+			return fmt.Errorf("ロックの作成に失敗: %w", err)
 		}
 
-		// Check for stale lock.
+		// ロックが失効していないか確認する。
 		if fl.isStale() {
 			os.RemoveAll(fl.dir)
 			continue
 		}
 
 		if time.Now().After(deadline) {
-			return fmt.Errorf("lock acquisition timed out after %v", lockTimeout)
+			return fmt.Errorf("ロック取得が %v 後にタイムアウト", lockTimeout)
 		}
 
 		time.Sleep(lockRetry)
 	}
 }
 
-// Unlock releases the file lock.
+// Unlock はファイルロックを解放する。
 func (fl *FileLock) Unlock() error {
 	return os.RemoveAll(fl.dir)
 }
 
-// isStale checks if the lock is older than staleDuration.
+// isStale はロックが staleDuration より古いかどうかを確認する。
 func (fl *FileLock) isStale() bool {
 	ts := filepath.Join(fl.dir, "ts")
 	data, err := os.ReadFile(ts)
 	if err != nil {
-		// If we can't read timestamp, check directory mod time.
+		// タイムスタンプが読めない場合、ディレクトリの更新時刻を確認する。
 		info, err := os.Stat(fl.dir)
 		if err != nil {
 			return false

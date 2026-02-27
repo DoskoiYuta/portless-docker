@@ -13,17 +13,17 @@ import (
 	"github.com/DoskoiYuta/portless-docker/internal/state"
 )
 
-// Daemon manages the proxy daemon lifecycle.
+// Daemon はプロキシデーモンのライフサイクルを管理する。
 type Daemon struct {
 	stateManager *state.Manager
 }
 
-// NewDaemon creates a new daemon manager.
+// NewDaemon は新しいデーモンマネージャーを作成する。
 func NewDaemon(sm *state.Manager) *Daemon {
 	return &Daemon{stateManager: sm}
 }
 
-// EnsureRunning starts the proxy daemon if it isn't already running.
+// EnsureRunning はプロキシデーモンがまだ起動していない場合に起動する。
 func (d *Daemon) EnsureRunning(proxyPort int) error {
 	if d.IsRunning() {
 		return nil
@@ -32,16 +32,16 @@ func (d *Daemon) EnsureRunning(proxyPort int) error {
 	return d.Start(proxyPort)
 }
 
-// Start launches the proxy as a background daemon process.
+// Start はプロキシをバックグラウンドデーモンプロセスとして起動する。
 func (d *Daemon) Start(proxyPort int) error {
 	executable, err := os.Executable()
 	if err != nil {
-		return fmt.Errorf("failed to get executable path: %w", err)
+		return fmt.Errorf("実行ファイルパスの取得に失敗: %w", err)
 	}
 
 	logFile, err := os.OpenFile(d.stateManager.LogPath(), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {
-		return fmt.Errorf("failed to open log file: %w", err)
+		return fmt.Errorf("ログファイルのオープンに失敗: %w", err)
 	}
 
 	cmd := exec.Command(executable, "__proxy", "--port", strconv.Itoa(proxyPort))
@@ -53,35 +53,35 @@ func (d *Daemon) Start(proxyPort int) error {
 
 	if err := cmd.Start(); err != nil {
 		logFile.Close()
-		return fmt.Errorf("failed to start proxy daemon: %w", err)
+		return fmt.Errorf("プロキシデーモンの起動に失敗: %w", err)
 	}
 
-	// Write PID and port files.
+	// PIDファイルとポートファイルを書き込む。
 	pid := cmd.Process.Pid
 	if err := os.WriteFile(d.stateManager.PIDPath(), []byte(strconv.Itoa(pid)), 0644); err != nil {
-		return fmt.Errorf("failed to write PID file: %w", err)
+		return fmt.Errorf("PIDファイルの書き込みに失敗: %w", err)
 	}
 	if err := os.WriteFile(d.stateManager.PortPath(), []byte(strconv.Itoa(proxyPort)), 0644); err != nil {
-		return fmt.Errorf("failed to write port file: %w", err)
+		return fmt.Errorf("ポートファイルの書き込みに失敗: %w", err)
 	}
 
-	// Release the process so it continues after parent exits.
+	// 親プロセス終了後もデーモンが継続するようプロセスを解放する。
 	cmd.Process.Release()
 	logFile.Close()
 
-	// Wait for the proxy to be ready.
+	// プロキシの準備完了を待機する。
 	if err := d.waitForReady(proxyPort, 5*time.Second); err != nil {
-		return fmt.Errorf("Proxy failed to start. Check %s", d.stateManager.LogPath())
+		return fmt.Errorf("プロキシの起動に失敗しました。%s を確認してください", d.stateManager.LogPath())
 	}
 
 	return nil
 }
 
-// Stop terminates the proxy daemon.
+// Stop はプロキシデーモンを終了する。
 func (d *Daemon) Stop() error {
 	pid, err := d.readPID()
 	if err != nil {
-		return nil // No PID file, nothing to stop.
+		return nil // PIDファイルなし。停止するものがない。
 	}
 
 	process, err := os.FindProcess(pid)
@@ -90,13 +90,13 @@ func (d *Daemon) Stop() error {
 		return nil
 	}
 
-	// Send SIGTERM for graceful shutdown.
+	// グレースフルシャットダウンのため SIGTERM を送信する。
 	if err := process.Signal(syscall.SIGTERM); err != nil {
 		d.cleanup()
 		return nil
 	}
 
-	// Wait for process to exit (with timeout).
+	// プロセスの終了を待機する（タイムアウト付き）。
 	done := make(chan struct{})
 	go func() {
 		process.Wait()
@@ -113,7 +113,7 @@ func (d *Daemon) Stop() error {
 	return nil
 }
 
-// IsRunning checks if the proxy daemon is alive.
+// IsRunning はプロキシデーモンが稼働中かどうかを確認する。
 func (d *Daemon) IsRunning() bool {
 	pid, err := d.readPID()
 	if err != nil {
@@ -125,25 +125,25 @@ func (d *Daemon) IsRunning() bool {
 		return false
 	}
 
-	// Signal 0 checks if the process exists without actually sending a signal.
+	// シグナル 0 はシグナルを送信せずにプロセスの存在を確認する。
 	err = process.Signal(syscall.Signal(0))
 	return err == nil
 }
 
-// GetPort returns the port the running proxy is listening on.
+// GetPort は実行中のプロキシがリッスンしているポートを返す。
 func (d *Daemon) GetPort() (int, error) {
 	data, err := os.ReadFile(d.stateManager.PortPath())
 	if err != nil {
-		return 0, fmt.Errorf("proxy not running")
+		return 0, fmt.Errorf("プロキシが実行されていません")
 	}
 	port, err := strconv.Atoi(strings.TrimSpace(string(data)))
 	if err != nil {
-		return 0, fmt.Errorf("invalid port file")
+		return 0, fmt.Errorf("無効なポートファイル")
 	}
 	return port, nil
 }
 
-// readPID reads the PID from the PID file.
+// readPID はPIDファイルからPIDを読み取る。
 func (d *Daemon) readPID() (int, error) {
 	data, err := os.ReadFile(d.stateManager.PIDPath())
 	if err != nil {
@@ -152,13 +152,13 @@ func (d *Daemon) readPID() (int, error) {
 	return strconv.Atoi(strings.TrimSpace(string(data)))
 }
 
-// cleanup removes PID and port files.
+// cleanup はPIDファイルとポートファイルを削除する。
 func (d *Daemon) cleanup() {
 	os.Remove(d.stateManager.PIDPath())
 	os.Remove(d.stateManager.PortPath())
 }
 
-// waitForReady polls until the proxy is accepting connections.
+// waitForReady はプロキシが接続を受け付けるまでポーリングする。
 func (d *Daemon) waitForReady(port int, timeout time.Duration) error {
 	deadline := time.Now().Add(timeout)
 	addr := fmt.Sprintf("127.0.0.1:%d", port)
@@ -172,5 +172,5 @@ func (d *Daemon) waitForReady(port int, timeout time.Duration) error {
 		time.Sleep(100 * time.Millisecond)
 	}
 
-	return fmt.Errorf("proxy not ready after %v", timeout)
+	return fmt.Errorf("プロキシが %v 経過後も準備完了しません", timeout)
 }

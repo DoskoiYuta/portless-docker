@@ -11,16 +11,16 @@ import (
 )
 
 var (
-	// Colors
-	primaryColor   = lipgloss.Color("#7C3AED") // Purple
-	successColor   = lipgloss.Color("#10B981") // Green
-	warningColor   = lipgloss.Color("#F59E0B") // Amber
-	errorColor     = lipgloss.Color("#EF4444") // Red
-	mutedColor     = lipgloss.Color("#6B7280") // Gray
-	linkColor      = lipgloss.Color("#3B82F6") // Blue
+	// カラー定義
+	primaryColor   = lipgloss.Color("#7C3AED") // 紫
+	successColor   = lipgloss.Color("#10B981") // 緑
+	warningColor   = lipgloss.Color("#F59E0B") // 琥珀
+	errorColor     = lipgloss.Color("#EF4444") // 赤
+	mutedColor     = lipgloss.Color("#6B7280") // グレー
+	linkColor      = lipgloss.Color("#3B82F6") // 青
 	whiteColor     = lipgloss.Color("#F9FAFB")
 
-	// Styles
+	// スタイル定義
 	titleStyle = lipgloss.NewStyle().
 			Bold(true).
 			Foreground(primaryColor).
@@ -66,7 +66,7 @@ var (
 			Padding(0, 1)
 )
 
-// RouteDisplay holds the display info for a route.
+// RouteDisplay はルートの表示情報を保持する。
 type RouteDisplay struct {
 	URL           string
 	HostPort      int
@@ -74,29 +74,29 @@ type RouteDisplay struct {
 	Service       string
 }
 
-// PrintBanner prints the portless-docker banner.
+// PrintBanner は portless-docker のバナーを表示する。
 func PrintBanner() {
 	fmt.Println(titleStyle.Render("portless-docker"))
 }
 
-// PrintComposeFile prints the detected compose file path.
+// PrintComposeFile は検出されたComposeファイルのパスを表示する。
 func PrintComposeFile(path string) {
 	fmt.Printf("%s %s\n", labelStyle.Render("Compose:"), path)
 	fmt.Println()
 }
 
-// PrintRoutes prints the route mappings in a formatted table.
+// PrintRoutes はルートマッピングをフォーマットされたテーブルで表示する。
 func PrintRoutes(routes []RouteDisplay, proxyPort int) {
 	if len(routes) == 0 {
 		return
 	}
 
-	// Sort routes by service name for consistent output.
+	// 一貫した出力のためサービス名でソートする。
 	sort.Slice(routes, func(i, j int) bool {
 		return routes[i].Service < routes[j].Service
 	})
 
-	// Calculate max URL length for alignment.
+	// 整列のため最大URL長を計算する。
 	maxURLLen := 0
 	for _, r := range routes {
 		url := fmt.Sprintf("http://%s:%d", r.URL, proxyPort)
@@ -113,57 +113,57 @@ func PrintRoutes(routes []RouteDisplay, proxyPort int) {
 			padding,
 			arrowStyle.Render("→"),
 			portStyle.Render(fmt.Sprintf(":%d", r.HostPort)),
-			containerPortStyle.Render(fmt.Sprintf("(container :%d)", r.ContainerPort)),
+			containerPortStyle.Render(fmt.Sprintf("(コンテナ :%d)", r.ContainerPort)),
 		)
 	}
 	fmt.Println()
 }
 
-// PrintCommand prints the docker compose command being executed.
+// PrintCommand は実行中の docker compose コマンドを表示する。
 func PrintCommand(args []string) {
 	cmd := strings.Join(args, " ")
 	fmt.Printf("%s %s\n\n",
-		labelStyle.Render("Running:"),
+		labelStyle.Render("実行中:"),
 		commandStyle.Render(cmd),
 	)
 }
 
-// PrintDetachedMessage prints the message shown after starting in detached mode.
+// PrintDetachedMessage はバックグラウンド起動後のメッセージを表示する。
 func PrintDetachedMessage() {
-	fmt.Println(successStyle.Render("Containers started in background."))
-	fmt.Printf("Run %s to stop.\n", commandStyle.Render("portless-docker down"))
+	fmt.Println(successStyle.Render("コンテナをバックグラウンドで起動しました。"))
+	fmt.Printf("停止するには %s を実行してください。\n", commandStyle.Render("portless-docker down"))
 }
 
-// PrintCleanup prints the cleanup summary.
+// PrintCleanup はクリーンアップの概要を表示する。
 func PrintCleanup(routeCount int) {
 	fmt.Println()
 	fmt.Println(successStyle.Render(
-		fmt.Sprintf("Cleaned up: override removed, %d route(s) unregistered.", routeCount),
+		fmt.Sprintf("クリーンアップ完了: オーバーライド削除、%d 件のルートを登録解除。", routeCount),
 	))
 }
 
-// PrintProxyStopped prints the proxy stopped message.
+// PrintProxyStopped はプロキシ停止メッセージを表示する。
 func PrintProxyStopped() {
-	fmt.Println(successStyle.Render("No routes remaining. Proxy stopped."))
+	fmt.Println(successStyle.Render("残存ルートなし。プロキシを停止しました。"))
 }
 
-// PrintStopping prints the stopping message.
+// PrintStopping はコンテナ停止中メッセージを表示する。
 func PrintStopping() {
 	fmt.Println()
-	fmt.Println(warningStyle.Render("Stopping containers..."))
+	fmt.Println(warningStyle.Render("コンテナを停止中..."))
 }
 
-// PrintActiveRoutes prints all active routes grouped by directory.
+// PrintActiveRoutes はディレクトリ別にグループ化された全アクティブルートを表示する。
 func PrintActiveRoutes(routes []state.Route, proxyPort int) {
 	if len(routes) == 0 {
-		fmt.Println(warningStyle.Render("No active routes."))
+		fmt.Println(warningStyle.Render("アクティブルートはありません。"))
 		return
 	}
 
-	fmt.Println(titleStyle.Render("Active routes:"))
+	fmt.Println(titleStyle.Render("アクティブルート:"))
 	fmt.Println()
 
-	// Group by directory.
+	// ディレクトリ別にグループ化する。
 	grouped := make(map[string][]state.Route)
 	var dirs []string
 	for _, r := range routes {
@@ -198,24 +198,24 @@ func PrintActiveRoutes(routes []state.Route, proxyPort int) {
 				padding,
 				arrowStyle.Render("→"),
 				portStyle.Render(fmt.Sprintf(":%d", r.HostPort)),
-				containerPortStyle.Render(fmt.Sprintf("(container :%d)", r.ContainerPort)),
+				containerPortStyle.Render(fmt.Sprintf("(コンテナ :%d)", r.ContainerPort)),
 			)
 		}
 		fmt.Println()
 	}
 }
 
-// PrintError prints a formatted error message.
+// PrintError はフォーマットされたエラーメッセージを表示する。
 func PrintError(msg string) {
-	fmt.Println(errorStyle.Render("Error: " + msg))
+	fmt.Println(errorStyle.Render("エラー: " + msg))
 }
 
-// PrintWarning prints a formatted warning message.
+// PrintWarning はフォーマットされた警告メッセージを表示する。
 func PrintWarning(msg string) {
-	fmt.Println(warningStyle.Render("Warning: " + msg))
+	fmt.Println(warningStyle.Render("警告: " + msg))
 }
 
-// PrintSuccess prints a formatted success message.
+// PrintSuccess はフォーマットされた成功メッセージを表示する。
 func PrintSuccess(msg string) {
 	fmt.Println(successStyle.Render(msg))
 }

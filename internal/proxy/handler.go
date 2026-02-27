@@ -10,25 +10,25 @@ import (
 	"github.com/DoskoiYuta/portless-docker/internal/state"
 )
 
-// Handler implements the HTTP handler for the reverse proxy.
+// Handler はリバースプロキシのHTTPハンドラーを実装する。
 type Handler struct {
 	stateManager *state.Manager
 }
 
-// NewHandler creates a new proxy handler.
+// NewHandler は新しいプロキシハンドラーを作成する。
 func NewHandler(sm *state.Manager) *Handler {
 	return &Handler{stateManager: sm}
 }
 
-// ServeHTTP handles incoming HTTP requests by routing based on the Host header.
+// ServeHTTP はHostヘッダーに基づいてルーティングし、受信HTTPリクエストを処理する。
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	host := r.Host
 	if host == "" {
-		http.Error(w, "Missing Host header", http.StatusBadRequest)
+		http.Error(w, "Hostヘッダーがありません", http.StatusBadRequest)
 		return
 	}
 
-	// Strip port from host if present.
+	// ホストからポート部分を除去する。
 	hostname := host
 	if idx := strings.LastIndex(host, ":"); idx != -1 {
 		hostname = host[:idx]
@@ -36,7 +36,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	routes, err := h.stateManager.GetAllRoutes()
 	if err != nil {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		http.Error(w, "内部サーバーエラー", http.StatusInternalServerError)
 		return
 	}
 
@@ -47,11 +47,11 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// No matching route found — return 404 with active routes list.
+	// 一致するルートが見つからない場合、アクティブルート一覧付きの404を返す。
 	h.notFound(w, r, hostname, routes)
 }
 
-// proxyTo forwards the request to the target service.
+// proxyTo はリクエストをターゲットサービスに転送する。
 func (h *Handler) proxyTo(w http.ResponseWriter, r *http.Request, route state.Route) {
 	targetURL := &url.URL{
 		Scheme: "http",
@@ -60,7 +60,7 @@ func (h *Handler) proxyTo(w http.ResponseWriter, r *http.Request, route state.Ro
 
 	proxy := httputil.NewSingleHostReverseProxy(targetURL)
 
-	// Customize the director to set forwarding headers.
+	// ディレクターをカスタマイズして転送ヘッダーを設定する。
 	originalDirector := proxy.Director
 	proxy.Director = func(req *http.Request) {
 		originalDirector(req)
@@ -82,31 +82,31 @@ code { background: #f4f4f4; padding: 2px 6px; border-radius: 3px; }
 </style></head>
 <body>
 <h1>502 Bad Gateway</h1>
-<p>Service <strong>%s</strong> (port %d) is not responding.</p>
-<p>The container may still be starting up. Try refreshing in a few seconds.</p>
+<p>サービス <strong>%s</strong> (ポート %d) が応答していません。</p>
+<p>コンテナがまだ起動中の可能性があります。数秒後にリロードしてください。</p>
 </body></html>`, route.Service, route.HostPort)
 	}
 
 	proxy.ServeHTTP(w, r)
 }
 
-// notFound returns a 404 page listing active routes.
+// notFound はアクティブルート一覧付きの404ページを返す。
 func (h *Handler) notFound(w http.ResponseWriter, r *http.Request, hostname string, routes []state.Route) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(http.StatusNotFound)
 
 	routeList := ""
 	if len(routes) > 0 {
-		routeList = "<h2>Active Routes</h2><ul>"
+		routeList = "<h2>アクティブルート</h2><ul>"
 		for _, route := range routes {
 			routeList += fmt.Sprintf(
-				`<li><a href="http://%s:%d">%s</a> → :%d (container :%d) [%s]</li>`,
+				`<li><a href="http://%s:%d">%s</a> → :%d (コンテナ :%d) [%s]</li>`,
 				route.Hostname, 1355, route.Hostname, route.HostPort, route.ContainerPort, route.Service,
 			)
 		}
 		routeList += "</ul>"
 	} else {
-		routeList = "<p>No active routes.</p>"
+		routeList = "<p>アクティブルートはありません。</p>"
 	}
 
 	fmt.Fprintf(w, `<!DOCTYPE html>
@@ -119,7 +119,7 @@ code { background: #f4f4f4; padding: 2px 6px; border-radius: 3px; }
 </style></head>
 <body>
 <h1>404 Not Found</h1>
-<p>No route registered for <code>%s</code></p>
+<p><code>%s</code> に対応するルートが登録されていません</p>
 %s
 </body></html>`, hostname, routeList)
 }

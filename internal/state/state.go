@@ -16,7 +16,7 @@ const (
 	logFileName   = "proxy.log"
 )
 
-// Route represents a single service route entry.
+// Route は単一のサービスルートエントリを表す。
 type Route struct {
 	Hostname      string    `json:"hostname"`
 	HostPort      int       `json:"hostPort"`
@@ -29,33 +29,33 @@ type Route struct {
 	RegisteredAt  time.Time `json:"registeredAt"`
 }
 
-// State represents the global portless-docker state.
+// State は portless-docker のグローバル状態を表す。
 type State struct {
 	ProxyPort int     `json:"proxyPort"`
 	Routes    []Route `json:"routes"`
 }
 
-// Manager handles state file operations.
+// Manager は状態ファイルの操作を管理する。
 type Manager struct {
 	baseDir string
 	lock    *FileLock
 }
 
-// NewManager creates a state manager, ensuring the state directory exists.
+// NewManager は状態マネージャーを作成し、状態ディレクトリの存在を保証する。
 func NewManager() (*Manager, error) {
 	home, err := os.UserHomeDir()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get home directory: %w", err)
+		return nil, fmt.Errorf("ホームディレクトリの取得に失敗: %w", err)
 	}
 
 	baseDir := filepath.Join(home, stateDirName)
 	return NewManagerWithDir(baseDir)
 }
 
-// NewManagerWithDir creates a state manager with a custom base directory.
+// NewManagerWithDir はカスタムベースディレクトリで状態マネージャーを作成する。
 func NewManagerWithDir(baseDir string) (*Manager, error) {
 	if err := os.MkdirAll(baseDir, 0755); err != nil {
-		return nil, fmt.Errorf("failed to create state directory: %w", err)
+		return nil, fmt.Errorf("状態ディレクトリの作成に失敗: %w", err)
 	}
 
 	return &Manager{
@@ -64,83 +64,83 @@ func NewManagerWithDir(baseDir string) (*Manager, error) {
 	}, nil
 }
 
-// BaseDir returns the state base directory path.
+// BaseDir は状態ベースディレクトリのパスを返す。
 func (m *Manager) BaseDir() string {
 	return m.baseDir
 }
 
-// StatePath returns the path to state.json.
+// StatePath は state.json のパスを返す。
 func (m *Manager) StatePath() string {
 	return filepath.Join(m.baseDir, stateFileName)
 }
 
-// PIDPath returns the path to proxy.pid.
+// PIDPath は proxy.pid のパスを返す。
 func (m *Manager) PIDPath() string {
 	return filepath.Join(m.baseDir, pidFileName)
 }
 
-// PortPath returns the path to proxy.port.
+// PortPath は proxy.port のパスを返す。
 func (m *Manager) PortPath() string {
 	return filepath.Join(m.baseDir, portFileName)
 }
 
-// LogPath returns the path to proxy.log.
+// LogPath は proxy.log のパスを返す。
 func (m *Manager) LogPath() string {
 	return filepath.Join(m.baseDir, logFileName)
 }
 
-// Load reads the current state from disk.
-// Returns a new empty state if the file doesn't exist.
+// Load はディスクから現在の状態を読み込む。
+// ファイルが存在しない場合は新しい空の状態を返す。
 func (m *Manager) Load() (*State, error) {
 	if err := m.lock.Lock(); err != nil {
-		return nil, fmt.Errorf("failed to acquire lock: %w", err)
+		return nil, fmt.Errorf("ロック取得に失敗: %w", err)
 	}
 	defer m.lock.Unlock()
 
 	return m.loadUnlocked()
 }
 
-// loadUnlocked reads state without acquiring the lock (caller must hold it).
+// loadUnlocked はロックを取得せずに状態を読み込む（呼び出し元がロックを保持していること）。
 func (m *Manager) loadUnlocked() (*State, error) {
 	data, err := os.ReadFile(m.StatePath())
 	if err != nil {
 		if os.IsNotExist(err) {
 			return &State{ProxyPort: 1355}, nil
 		}
-		return nil, fmt.Errorf("failed to read state: %w", err)
+		return nil, fmt.Errorf("状態の読み込みに失敗: %w", err)
 	}
 
 	var s State
 	if err := json.Unmarshal(data, &s); err != nil {
-		return nil, fmt.Errorf("failed to parse state: %w", err)
+		return nil, fmt.Errorf("状態のパースに失敗: %w", err)
 	}
 	return &s, nil
 }
 
-// Save writes the state to disk.
+// Save は状態をディスクに書き込む。
 func (m *Manager) Save(s *State) error {
 	if err := m.lock.Lock(); err != nil {
-		return fmt.Errorf("failed to acquire lock: %w", err)
+		return fmt.Errorf("ロック取得に失敗: %w", err)
 	}
 	defer m.lock.Unlock()
 
 	return m.saveUnlocked(s)
 }
 
-// saveUnlocked writes state without acquiring the lock (caller must hold it).
+// saveUnlocked はロックを取得せずに状態を書き込む（呼び出し元がロックを保持していること）。
 func (m *Manager) saveUnlocked(s *State) error {
 	data, err := json.MarshalIndent(s, "", "  ")
 	if err != nil {
-		return fmt.Errorf("failed to marshal state: %w", err)
+		return fmt.Errorf("状態のマーシャルに失敗: %w", err)
 	}
 	return os.WriteFile(m.StatePath(), data, 0644)
 }
 
-// WithLock executes fn while holding the state lock.
-// The function receives the current state and can modify it; the modified state is saved.
+// WithLock は状態ロックを保持した状態で fn を実行する。
+// 関数は現在の状態を受け取り、変更可能。変更された状態は自動的に保存される。
 func (m *Manager) WithLock(fn func(s *State) error) error {
 	if err := m.lock.Lock(); err != nil {
-		return fmt.Errorf("failed to acquire lock: %w", err)
+		return fmt.Errorf("ロック取得に失敗: %w", err)
 	}
 	defer m.lock.Unlock()
 

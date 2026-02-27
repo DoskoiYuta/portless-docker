@@ -25,16 +25,16 @@ func TestParsePortString(t *testing.T) {
 		t.Run(tt.input, func(t *testing.T) {
 			pm := parsePortString(tt.input)
 			if pm == nil {
-				t.Fatal("expected non-nil PortMapping")
+				t.Fatal("PortMapping が nil でないことを期待")
 			}
 			if pm.HostPort != tt.wantHost {
-				t.Errorf("HostPort = %d, want %d", pm.HostPort, tt.wantHost)
+				t.Errorf("HostPort = %d, 期待値 %d", pm.HostPort, tt.wantHost)
 			}
 			if pm.ContainerPort != tt.wantCont {
-				t.Errorf("ContainerPort = %d, want %d", pm.ContainerPort, tt.wantCont)
+				t.Errorf("ContainerPort = %d, 期待値 %d", pm.ContainerPort, tt.wantCont)
 			}
 			if pm.Protocol != tt.wantProto {
-				t.Errorf("Protocol = %q, want %q", pm.Protocol, tt.wantProto)
+				t.Errorf("Protocol = %q, 期待値 %q", pm.Protocol, tt.wantProto)
 			}
 		})
 	}
@@ -56,7 +56,7 @@ func TestServiceSubdomain(t *testing.T) {
 		t.Run(tt.input, func(t *testing.T) {
 			got := ServiceSubdomain(tt.input)
 			if got != tt.want {
-				t.Errorf("ServiceSubdomain(%q) = %q, want %q", tt.input, got, tt.want)
+				t.Errorf("ServiceSubdomain(%q) = %q, 期待値 %q", tt.input, got, tt.want)
 			}
 		})
 	}
@@ -65,22 +65,22 @@ func TestServiceSubdomain(t *testing.T) {
 func TestFindComposeFile(t *testing.T) {
 	dir := t.TempDir()
 
-	// No compose file found
+	// Composeファイルが存在しない場合
 	_, err := FindComposeFile(dir, "")
 	if err == nil {
-		t.Error("expected error when no compose file exists")
+		t.Error("Composeファイルが存在しない場合にエラーを期待")
 	}
 
-	// Create docker-compose.yml
+	// docker-compose.yml を作成
 	p := filepath.Join(dir, "docker-compose.yml")
 	os.WriteFile(p, []byte("services: {}"), 0644)
 
 	found, err := FindComposeFile(dir, "")
 	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+		t.Fatalf("予期しないエラー: %v", err)
 	}
 	if filepath.Base(found) != "docker-compose.yml" {
-		t.Errorf("expected docker-compose.yml, got %s", filepath.Base(found))
+		t.Errorf("docker-compose.yml を期待したが %s を取得", filepath.Base(found))
 	}
 }
 
@@ -104,27 +104,27 @@ func TestParse(t *testing.T) {
 
 	cf, err := Parse(composePath, nil)
 	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+		t.Fatalf("予期しないエラー: %v", err)
 	}
 
 	if len(cf.Services) != 2 {
-		t.Fatalf("expected 2 services, got %d", len(cf.Services))
+		t.Fatalf("2サービスを期待したが %d を取得", len(cf.Services))
 	}
 
 	fe, ok := cf.Services["frontend"]
 	if !ok {
-		t.Fatal("expected frontend service")
+		t.Fatal("frontend サービスを期待")
 	}
 	if fe.ContainerPort != 3000 {
-		t.Errorf("frontend ContainerPort = %d, want 3000", fe.ContainerPort)
+		t.Errorf("frontend ContainerPort = %d, 期待値 3000", fe.ContainerPort)
 	}
 
 	api, ok := cf.Services["api"]
 	if !ok {
-		t.Fatal("expected api service")
+		t.Fatal("api サービスを期待")
 	}
 	if api.ContainerPort != 8080 {
-		t.Errorf("api ContainerPort = %d, want 8080", api.ContainerPort)
+		t.Errorf("api ContainerPort = %d, 期待値 8080", api.ContainerPort)
 	}
 }
 
@@ -145,13 +145,13 @@ func TestParseWithIgnore(t *testing.T) {
 	ignored := map[string]bool{"api": true}
 	cf, err := Parse(composePath, ignored)
 	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+		t.Fatalf("予期しないエラー: %v", err)
 	}
 
 	if len(cf.Services) != 1 {
-		t.Fatalf("expected 1 service, got %d", len(cf.Services))
+		t.Fatalf("1サービスを期待したが %d を取得", len(cf.Services))
 	}
 	if _, ok := cf.Services["frontend"]; !ok {
-		t.Error("expected frontend service")
+		t.Error("frontend サービスを期待")
 	}
 }

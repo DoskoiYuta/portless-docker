@@ -6,18 +6,18 @@ import (
 )
 
 const (
-	// MinPort is the minimum host port to allocate.
+	// MinPort は割り当て可能なホストポートの最小値。
 	MinPort = 40000
-	// MaxPort is the maximum host port to allocate.
+	// MaxPort は割り当て可能なホストポートの最大値。
 	MaxPort = 49999
 )
 
-// Allocator handles dynamic port allocation.
+// Allocator は動的ポート割り当てを処理する。
 type Allocator struct {
 	used map[int]bool
 }
 
-// NewAllocator creates a new port allocator with optional pre-allocated ports.
+// NewAllocator は新しいポートアロケータを作成する。usedPorts で既に使用中のポートを指定可能。
 func NewAllocator(usedPorts []int) *Allocator {
 	used := make(map[int]bool, len(usedPorts))
 	for _, p := range usedPorts {
@@ -26,8 +26,8 @@ func NewAllocator(usedPorts []int) *Allocator {
 	return &Allocator{used: used}
 }
 
-// Allocate finds an available port in the configured range.
-// It binds to the port to verify it is free, then releases it.
+// Allocate は設定範囲内で利用可能なポートを見つける。
+// ポートにバインドして空いていることを確認した後、リリースする。
 func (a *Allocator) Allocate() (int, error) {
 	for port := MinPort; port <= MaxPort; port++ {
 		if a.used[port] {
@@ -38,10 +38,10 @@ func (a *Allocator) Allocate() (int, error) {
 			return port, nil
 		}
 	}
-	return 0, fmt.Errorf("no available ports in range %d-%d", MinPort, MaxPort)
+	return 0, fmt.Errorf("範囲 %d-%d で利用可能なポートがありません", MinPort, MaxPort)
 }
 
-// isPortAvailable checks if a TCP port is available by binding to it.
+// isPortAvailable はTCPポートにバインドして利用可能かどうかを確認する。
 func isPortAvailable(port int) bool {
 	ln, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", port))
 	if err != nil {

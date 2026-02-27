@@ -7,14 +7,14 @@ import (
 	"github.com/DoskoiYuta/portless-docker/internal/state"
 )
 
-// newProxyCmd creates the hidden __proxy command used to start the proxy daemon.
+// newProxyCmd はプロキシデーモン起動用の隠し __proxy コマンドを作成する。
 func newProxyCmd() *cobra.Command {
 	var port int
 
 	cmd := &cobra.Command{
 		Use:    "__proxy",
 		Hidden: true,
-		Short:  "Start the reverse proxy server (internal use)",
+		Short:  "リバースプロキシサーバーを起動する（内部使用）",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			sm, err := state.NewManager()
 			if err != nil {
@@ -26,6 +26,6 @@ func newProxyCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().IntVar(&port, "port", 1355, "Proxy listen port")
+	cmd.Flags().IntVar(&port, "port", 1355, "プロキシのリッスンポート")
 	return cmd
 }

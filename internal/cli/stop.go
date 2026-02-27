@@ -16,10 +16,10 @@ func newStopCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "stop",
-		Short: "Stop portless-docker and unregister routes",
+		Short: "portless-docker を停止してルートを登録解除する",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if !all {
-				return fmt.Errorf("use --all to stop all routes and the proxy")
+				return fmt.Errorf("全ルートとプロキシを停止するには --all を使用してください")
 			}
 
 			sm, err := state.NewManager()
@@ -27,13 +27,13 @@ func newStopCmd() *cobra.Command {
 				return err
 			}
 
-			// Remove all routes.
+			// 全ルートを削除する。
 			removed, err := sm.UnregisterAllRoutes()
 			if err != nil {
 				return err
 			}
 
-			// Clean up override files.
+			// オーバーライドファイルをクリーンアップする。
 			seen := make(map[string]bool)
 			for _, r := range removed {
 				if r.OverridePath != "" && !seen[r.OverridePath] {
@@ -44,11 +44,11 @@ func newStopCmd() *cobra.Command {
 
 			ui.PrintCleanup(len(removed))
 
-			// Stop the proxy daemon.
+			// プロキシデーモンを停止する。
 			daemon := proxy.NewDaemon(sm)
 			if daemon.IsRunning() {
 				if err := daemon.Stop(); err != nil {
-					return fmt.Errorf("failed to stop proxy: %w", err)
+					return fmt.Errorf("プロキシの停止に失敗: %w", err)
 				}
 				ui.PrintProxyStopped()
 			}
@@ -57,6 +57,6 @@ func newStopCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().BoolVar(&all, "all", false, "Stop all routes and the proxy")
+	cmd.Flags().BoolVar(&all, "all", false, "全ルートとプロキシを停止する")
 	return cmd
 }

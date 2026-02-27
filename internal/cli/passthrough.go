@@ -26,7 +26,7 @@ func newPassthroughCmd() *cobra.Command {
 		DisableFlagParsing: false,
 		Args:               cobra.ArbitraryArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// Separate passthrough args (after "--").
+			// パススルー引数を分離する（"--" の後）。
 			var passthroughArgs []string
 			for i, a := range args {
 				if a == "--" {
@@ -36,7 +36,7 @@ func newPassthroughCmd() *cobra.Command {
 			}
 
 			if len(passthroughArgs) == 0 {
-				return fmt.Errorf("no docker compose subcommand specified")
+				return fmt.Errorf("docker compose のサブコマンドが指定されていません")
 			}
 
 			return runPassthrough(passthroughArgs)
@@ -46,14 +46,14 @@ func newPassthroughCmd() *cobra.Command {
 }
 
 func runPassthrough(args []string) error {
-	// Check docker compose is available.
+	// docker compose が利用可能か確認する。
 	if err := ui.CheckDockerCompose(); err != nil {
 		return err
 	}
 
 	cwd, err := os.Getwd()
 	if err != nil {
-		return fmt.Errorf("failed to get working directory: %w", err)
+		return fmt.Errorf("作業ディレクトリの取得に失敗: %w", err)
 	}
 	cwd, _ = filepath.Abs(cwd)
 
@@ -67,13 +67,13 @@ func runPassthrough(args []string) error {
 		subcmd = args[0]
 	}
 
-	// Determine compose file.
+	// Composeファイルを決定する。
 	composePath, err := compose.FindComposeFile(cwd, composeFile)
 	if err != nil {
 		return err
 	}
 
-	// Check if routes are already registered for this directory.
+	// このディレクトリにルートが既に登録されているか確認する。
 	existingRoutes, err := sm.GetRoutes(cwd)
 	if err != nil {
 		return err
@@ -84,23 +84,23 @@ func runPassthrough(args []string) error {
 	needsSetup := len(existingRoutes) == 0
 
 	if needsSetup {
-		// Parse compose file and set up routes.
+		// Composeファイルをパースしてルートをセットアップする。
 		cf, err := compose.Parse(composePath, getIgnoredServices())
 		if err != nil {
 			return err
 		}
 
-		// Get already used ports.
+		// 既に使用中のポートを取得する。
 		usedPorts, err := sm.GetUsedPorts()
 		if err != nil {
 			return err
 		}
 
-		// Allocate ports.
+		// ポートを割り当てる。
 		allocator := ports.NewAllocator(usedPorts)
 		var overrideEntries []compose.OverrideEntry
 
-		// Sort service names for deterministic output.
+		// 決定的な出力のためサービス名をソートする。
 		var serviceNames []string
 		for name := range cf.Services {
 			serviceNames = append(serviceNames, name)
@@ -111,7 +111,7 @@ func runPassthrough(args []string) error {
 			svc := cf.Services[name]
 			hostPort, err := allocator.Allocate()
 			if err != nil {
-				return fmt.Errorf("failed to allocate port for %s: %w", name, err)
+				return fmt.Errorf("%s のポート割り当てに失敗: %w", name, err)
 			}
 
 			hostname := compose.ServiceSubdomain(name) + ".localhost"
@@ -132,36 +132,36 @@ func runPassthrough(args []string) error {
 			})
 		}
 
-		// Generate override file.
+		// オーバーライドファイルを生成する。
 		overridePath, err = compose.GenerateOverride(overrideEntries)
 		if err != nil {
-			return fmt.Errorf("failed to generate override: %w", err)
+			return fmt.Errorf("オーバーライドの生成に失敗: %w", err)
 		}
 
-		// Set override path on all routes.
+		// 全ルートにオーバーライドパスを設定する。
 		for i := range routes {
 			routes[i].OverridePath = overridePath
 		}
 
-		// Determine detached mode.
+		// デタッチモードを判定する。
 		isDetached := isDetachedMode(args)
 		for i := range routes {
 			routes[i].Detached = isDetached
 		}
 
-		// Register routes.
+		// ルートを登録する。
 		if err := sm.RegisterRoutes(routes); err != nil {
 			compose.RemoveOverride(overridePath)
 			return err
 		}
 
-		// Ensure proxy is running.
+		// プロキシが起動していることを確認する。
 		daemon := proxy.NewDaemon(sm)
 		if err := daemon.EnsureRunning(proxyPort); err != nil {
 			return err
 		}
 
-		// Print banner and route info.
+		// バナーとルート情報を表示する。
 		ui.PrintBanner()
 		ui.PrintComposeFile(composePath)
 
@@ -180,17 +180,17 @@ func runPassthrough(args []string) error {
 		overridePath = existingRoutes[0].OverridePath
 	}
 
-	// Build docker compose command.
+	// docker compose コマンドを構築する。
 	composeArgs := buildComposeArgs(composePath, overridePath, args)
 
 	if needsSetup {
 		ui.PrintCommand(append([]string{"docker", "compose"}, composeArgs...))
 	}
 
-	// Execute docker compose.
+	// docker compose を実行する。
 	exitCode := execDockerCompose(composeArgs)
 
-	// Post-processing.
+	// 後処理。
 	isUp := subcmd == "up"
 	isDown := subcmd == "down"
 	isForegroundUp := isUp && !isDetachedMode(args)
@@ -210,7 +210,7 @@ func runPassthrough(args []string) error {
 	return nil
 }
 
-// buildComposeArgs builds the docker compose command arguments.
+// buildComposeArgs は docker compose コマンドの引数を構築する。
 func buildComposeArgs(composePath, overridePath string, userArgs []string) []string {
 	args := []string{"-f", composePath}
 	if overridePath != "" {
@@ -220,14 +220,14 @@ func buildComposeArgs(composePath, overridePath string, userArgs []string) []str
 	return args
 }
 
-// execDockerCompose runs docker compose and returns the exit code.
+// execDockerCompose は docker compose を実行して終了コードを返す。
 func execDockerCompose(args []string) int {
 	cmd := exec.Command("docker", append([]string{"compose"}, args...)...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
-	// Forward signals to the child process.
+	// シグナルを子プロセスに転送する。
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
@@ -247,19 +247,19 @@ func execDockerCompose(args []string) int {
 	return 0
 }
 
-// cleanup removes override files and unregisters routes.
+// cleanup はオーバーライドファイルを削除し、ルートを登録解除する。
 func cleanup(sm *state.Manager, directory, overridePath string, routeCount int) {
 	ui.PrintStopping()
 
-	// Unregister routes.
+	// ルートを登録解除する。
 	sm.UnregisterRoutes(directory)
 
-	// Remove override file.
+	// オーバーライドファイルを削除する。
 	compose.RemoveOverride(overridePath)
 
 	ui.PrintCleanup(routeCount)
 
-	// Check if proxy should be stopped.
+	// プロキシを停止すべきか確認する。
 	has, err := sm.HasRoutes()
 	if err == nil && !has {
 		daemon := proxy.NewDaemon(sm)
@@ -270,7 +270,7 @@ func cleanup(sm *state.Manager, directory, overridePath string, routeCount int) 
 	}
 }
 
-// isDetachedMode checks if -d flag is present in args.
+// isDetachedMode は引数に -d フラグが含まれているかを確認する。
 func isDetachedMode(args []string) bool {
 	for _, arg := range args {
 		if arg == "-d" || arg == "--detach" {
@@ -283,7 +283,7 @@ func isDetachedMode(args []string) bool {
 	return false
 }
 
-// isUpCommand checks if the subcommand is "up" (first non-flag arg).
+// isUpCommand はサブコマンドが "up" かどうかを確認する（最初の非フラグ引数）。
 func isUpCommand(args []string) bool {
 	for _, arg := range args {
 		if strings.HasPrefix(arg, "-") {
