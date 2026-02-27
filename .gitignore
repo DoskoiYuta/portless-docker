@@ -24,6 +24,10 @@ profile.cov
 go.work
 go.work.sum
 
+# Build output
+dist/
+portless-docker
+
 # env file
 .env
 
