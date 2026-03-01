@@ -62,6 +62,28 @@ func TestServiceSubdomain(t *testing.T) {
 	}
 }
 
+func TestBuildHostname(t *testing.T) {
+	tests := []struct {
+		service string
+		project string
+		want    string
+	}{
+		{"frontend", "myproject", "frontend.myproject.localhost"},
+		{"api", "my-app", "api.my-app.localhost"},
+		{"web_app", "Project_A", "web-app.project-a.localhost"},
+		{"My_Service", "My_Project", "my-service.my-project.localhost"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.service+"_"+tt.project, func(t *testing.T) {
+			got := BuildHostname(tt.service, tt.project)
+			if got != tt.want {
+				t.Errorf("BuildHostname(%q, %q) = %q, 期待値 %q", tt.service, tt.project, got, tt.want)
+			}
+		})
+	}
+}
+
 func TestFindComposeFile(t *testing.T) {
 	dir := t.TempDir()
 

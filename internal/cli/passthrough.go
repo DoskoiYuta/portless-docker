@@ -127,7 +127,7 @@ func runPassthrough(args []string) error {
 				return fmt.Errorf("%s のポート割り当てに失敗: %w", name, err)
 			}
 
-			hostname := compose.ServiceSubdomain(name) + ".localhost"
+			hostname := compose.BuildHostname(name, projectName)
 
 			routes = append(routes, state.Route{
 				Hostname:      hostname,

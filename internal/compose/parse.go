@@ -237,3 +237,9 @@ func ServiceSubdomain(name string) string {
 	s = strings.ToLower(s)
 	return s
 }
+
+// BuildHostname はサービス名とプロジェクト名からホスト名を生成する。
+// 形式: <service>.<project>.localhost
+func BuildHostname(serviceName, projectName string) string {
+	return ServiceSubdomain(serviceName) + "." + ServiceSubdomain(projectName) + ".localhost"
+}
