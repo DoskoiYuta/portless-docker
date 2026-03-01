@@ -19,6 +19,12 @@ func TestParsePortString(t *testing.T) {
 		{"127.0.0.1:3000:3000", 3000, 3000, ""},
 		{"0.0.0.0:3000:3000/tcp", 3000, 3000, "tcp"},
 		{"9090:9090/udp", 9090, 9090, "udp"},
+		// 環境変数を含むポート指定
+		{"${FRONTEND_PORT:-8002}:8002", 8002, 8002, ""},
+		{"${HOST_PORT:-3000}:3000/tcp", 3000, 3000, "tcp"},
+		{"${PORT:-9090}", 9090, 9090, ""},
+		{"127.0.0.1:${API_PORT:-4000}:4000", 4000, 4000, ""},
+		// デフォルト値なしの環境変数（展開不能 → nil）
 	}
 
 	for _, tt := range tests {
@@ -37,6 +43,75 @@ func TestParsePortString(t *testing.T) {
 				t.Errorf("Protocol = %q, 期待値 %q", pm.Protocol, tt.wantProto)
 			}
 		})
+	}
+}
+
+func TestParsePortStringEnvVarSet(t *testing.T) {
+	// 環境変数がセットされている場合はその値が使われる
+	t.Setenv("TEST_PORT", "7777")
+	pm := parsePortString("${TEST_PORT:-8002}:8002")
+	if pm == nil {
+		t.Fatal("PortMapping が nil でないことを期待")
+	}
+	if pm.HostPort != 7777 {
+		t.Errorf("HostPort = %d, 期待値 7777", pm.HostPort)
+	}
+	if pm.ContainerPort != 8002 {
+		t.Errorf("ContainerPort = %d, 期待値 8002", pm.ContainerPort)
+	}
+}
+
+func TestParsePortStringEnvVarNoDefault(t *testing.T) {
+	// デフォルト値なし・環境変数未設定 → nil
+	pm := parsePortString("${UNSET_VAR}:8002")
+	if pm != nil {
+		t.Error("デフォルト値なしの未設定環境変数は nil を期待")
+	}
+
+	// デフォルト値なし・環境変数設定済み → 値を使用
+	t.Setenv("SET_VAR", "5555")
+	pm = parsePortString("${SET_VAR}:8002")
+	if pm == nil {
+		t.Fatal("PortMapping が nil でないことを期待")
+	}
+	if pm.HostPort != 5555 {
+		t.Errorf("HostPort = %d, 期待値 5555", pm.HostPort)
+	}
+}
+
+func TestParseWithEnvVarPorts(t *testing.T) {
+	dir := t.TempDir()
+	composePath := filepath.Join(dir, "docker-compose.yml")
+
+	content := `services:
+  frontend:
+    build: ./frontend
+    ports:
+      - "${FRONTEND_PORT:-8002}:8002"
+  api:
+    build: ./api
+    ports:
+      - "8080:8080"
+`
+	if err := os.WriteFile(composePath, []byte(content), 0644); err != nil {
+		t.Fatalf("ファイル書き込みエラー: %v", err)
+	}
+
+	cf, err := Parse(composePath, nil)
+	if err != nil {
+		t.Fatalf("予期しないエラー: %v", err)
+	}
+
+	if len(cf.Services) != 2 {
+		t.Fatalf("2サービスを期待したが %d を取得", len(cf.Services))
+	}
+
+	fe, ok := cf.Services["frontend"]
+	if !ok {
+		t.Fatal("frontend サービスを期待")
+	}
+	if fe.ContainerPort != 8002 {
+		t.Errorf("frontend ContainerPort = %d, 期待値 8002", fe.ContainerPort)
 	}
 }
 

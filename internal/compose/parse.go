@@ -4,11 +4,41 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 
 	"gopkg.in/yaml.v3"
 )
+
+// envVarPattern は ${VAR} や ${VAR:-default} 形式の環境変数参照にマッチする。
+var envVarPattern = regexp.MustCompile(`\$\{([^}]+)\}`)
+
+// expandEnvVar は文字列中の ${VAR} や ${VAR:-default} を展開する。
+// 環境変数がセットされていればその値を、なければデフォルト値を使う。
+// デフォルト値もなく環境変数も未設定の場合は空文字列を返す。
+func expandEnvVar(s string) string {
+	return envVarPattern.ReplaceAllStringFunc(s, func(match string) string {
+		// ${...} の中身を取り出す
+		inner := match[2 : len(match)-1]
+
+		// :- によるデフォルト値の分離
+		if idx := strings.Index(inner, ":-"); idx != -1 {
+			varName := inner[:idx]
+			defaultVal := inner[idx+2:]
+			if val, ok := os.LookupEnv(varName); ok {
+				return val
+			}
+			return defaultVal
+		}
+
+		// デフォルト値なし
+		if val, ok := os.LookupEnv(inner); ok {
+			return val
+		}
+		return ""
+	})
+}
 
 // ServiceType はサービスのプロトコル種別を表す。
 type ServiceType string
@@ -179,6 +209,9 @@ func parseFirstTCPPort(rawPorts []string) *PortMapping {
 //   - "127.0.0.1:3000:3000"
 //   - "0.0.0.0:3000:3000/tcp"
 func parsePortString(s string) *PortMapping {
+	// 環境変数を展開する。
+	s = expandEnvVar(s)
+
 	// プロトコルサフィックスを除去する。
 	proto := ""
 	if idx := strings.LastIndex(s, "/"); idx != -1 {
