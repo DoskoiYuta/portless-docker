@@ -231,7 +231,7 @@ func runPassthrough(args []string) error {
 			})
 		}
 		ui.PrintRoutes(displays, proxyPort)
-	} else {
+	} else if len(existingRoutes) > 0 {
 		routes = existingRoutes
 		overridePath = existingRoutes[0].OverridePath
 	}
