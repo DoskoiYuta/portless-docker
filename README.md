@@ -128,7 +128,7 @@ services:
     ports:
       - "3000:3000"
     labels:
-      portless-docker.env.API_URL: "http://{{api.hostname}}:{{api.proxyPort}}"
+      portless-docker.env.API_URL: "http://{{api.host}}:{{api.port}}"
   api:
     ports:
       - "8080:8080"
@@ -138,10 +138,8 @@ services:
 
 | プレースホルダー | 値 |
 |---------------|---|
-| `{{service.hostname}}` | `service.localhost` |
-| `{{service.hostPort}}` | 割り当てられたホストポート |
-| `{{service.containerPort}}` | コンテナ内ポート |
-| `{{service.proxyPort}}` | プロキシのリッスンポート |
+| `{{service.host}}` | `service.localhost` |
+| `{{service.port}}` | プロキシのリッスンポート |
 | `{{service.url}}` | `http://service.localhost:1355` |
 
 ## 状態ファイル
