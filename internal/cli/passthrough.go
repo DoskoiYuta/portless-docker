@@ -247,15 +247,11 @@ func runPassthrough(args []string) error {
 	exitCode := execDockerCompose(composeArgs)
 
 	// 後処理。
-	isUp := subcmd == "up"
-	isDown := subcmd == "down"
-	isForegroundUp := isUp && !isDetachedMode(args)
-
-	if isDown || isForegroundUp {
+	if shouldCleanup(subcmd, args) {
 		cleanup(sm, cwd, overridePath, len(routes))
 	}
 
-	if isUp && isDetachedMode(args) && needsSetup {
+	if subcmd == "up" && isDetachedMode(args) && needsSetup {
 		ui.PrintDetachedMessage()
 	}
 
@@ -323,6 +319,18 @@ func cleanup(sm *state.Manager, directory, overridePath string, routeCount int) 
 			_ = daemon.Stop()
 			ui.PrintProxyStopped()
 		}
+	}
+}
+
+// shouldCleanup はサブコマンドに応じてクリーンアップが必要かを判定する。
+func shouldCleanup(subcmd string, args []string) bool {
+	switch subcmd {
+	case "down", "stop":
+		return true
+	case "up":
+		return !isDetachedMode(args)
+	default:
+		return false
 	}
 }
 
