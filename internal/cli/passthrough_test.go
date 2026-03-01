@@ -4,10 +4,10 @@ import "testing"
 
 func TestShouldCleanup(t *testing.T) {
 	tests := []struct {
-		name    string
-		subcmd  string
-		args    []string
-		want    bool
+		name   string
+		subcmd string
+		args   []string
+		want   bool
 	}{
 		{
 			name:   "down コマンドはクリーンアップする",
