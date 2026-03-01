@@ -146,6 +146,48 @@ func runPassthrough(args []string) error {
 			})
 		}
 
+		// ラベルから環境変数テンプレートを解決する。
+		envLabels, err := compose.ParseEnvLabels(composePath)
+		if err != nil {
+			return err
+		}
+		if len(envLabels) > 0 {
+			endpoints := make(map[string]compose.ServiceEndpoint)
+			for _, r := range routes {
+				ep := compose.ServiceEndpoint{
+					Hostname: r.Hostname,
+					Port:     proxyPort,
+					Type:     compose.ServiceType(r.Type),
+				}
+				if r.Type == string(compose.ServiceTypeTCP) {
+					ep.Hostname = "localhost"
+					ep.Port = r.HostPort
+				}
+				endpoints[r.Service] = ep
+			}
+
+			resolved, err := compose.ResolveAllEnvLabels(envLabels, endpoints)
+			if err != nil {
+				return err
+			}
+
+			// 既存のオーバーライドエントリに環境変数を追加する。
+			for i, entry := range overrideEntries {
+				if env, ok := resolved[entry.ServiceName]; ok {
+					overrideEntries[i].Environment = env
+					delete(resolved, entry.ServiceName)
+				}
+			}
+
+			// ポートなし・ラベルありのサービス用エントリを追加する。
+			for svcName, env := range resolved {
+				overrideEntries = append(overrideEntries, compose.OverrideEntry{
+					ServiceName: svcName,
+					Environment: env,
+				})
+			}
+		}
+
 		// オーバーライドファイルを生成する。
 		overridePath, err = compose.GenerateOverride(overrideEntries)
 		if err != nil {
