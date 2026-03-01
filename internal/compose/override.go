@@ -10,7 +10,7 @@ import (
 // OverrideEntry はサービスのポートオーバーライドを記述する。
 type OverrideEntry struct {
 	ServiceName   string
-	HostPort      int               // 0 の場合はポートオーバーライドなし
+	HostPort      int // 0 の場合はポートオーバーライドなし
 	ContainerPort int
 	Environment   map[string]string // ラベルから解決された環境変数
 }

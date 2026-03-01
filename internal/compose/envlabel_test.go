@@ -9,10 +9,10 @@ import (
 
 func TestExtractEnvLabels_Map(t *testing.T) {
 	labels := map[string]interface{}{
-		"portless-docker.env.API_URL":    "http://{{api.host}}:{{api.port}}/v1",
-		"portless-docker.env.WS_URL":     "ws://{{api.host}}:{{api.port}}/ws",
-		"com.example.unrelated":          "ignored",
-		"portless-docker.env.":           "empty key should be skipped",
+		"portless-docker.env.API_URL": "http://{{api.host}}:{{api.port}}/v1",
+		"portless-docker.env.WS_URL":  "ws://{{api.host}}:{{api.port}}/ws",
+		"com.example.unrelated":       "ignored",
+		"portless-docker.env.":        "empty key should be skipped",
 	}
 
 	result := extractEnvLabels(labels)
@@ -70,10 +70,10 @@ func TestResolveEnvTemplate(t *testing.T) {
 	}
 
 	tests := []struct {
-		name     string
-		tmpl     string
-		want     string
-		wantErr  bool
+		name    string
+		tmpl    string
+		want    string
+		wantErr bool
 	}{
 		{
 			name: "HTTP url",
