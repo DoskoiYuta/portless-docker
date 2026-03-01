@@ -80,7 +80,7 @@ func runPassthrough(args []string) error {
 
 	var overridePath string
 	var routes []state.Route
-	needsSetup := len(existingRoutes) == 0 && subcmd == "up"
+	needsSetup := len(existingRoutes) == 0 && (subcmd == "up" || subcmd == "run")
 
 	if needsSetup {
 		// Composeファイルをパースしてルートをセットアップする。
