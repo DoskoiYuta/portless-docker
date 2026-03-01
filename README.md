@@ -37,6 +37,25 @@ Browser: http://frontend.localhost:1355
 5. `docker compose` を元ファイル + オーバーライドで実行
 6. 終了時に自動クリーンアップ
 
+### HTTP サービスと TCP サービスの自動判定
+
+コンテナポートが以下の well-known TCP ポートに該当する場合、HTTP プロキシではなく直接ポートマッピングで公開されます:
+
+| ポート | サービス |
+|--------|----------|
+| 3306 | MySQL |
+| 5432 | PostgreSQL |
+| 6379 / 6380 | Redis |
+| 26379 | Redis Sentinel |
+| 27017 | MongoDB |
+| 9042 | Cassandra |
+| 5672 | RabbitMQ (AMQP) |
+| 11211 | Memcached |
+| 2181 | ZooKeeper |
+| 9092 | Kafka |
+
+それ以外のポート（80, 3000, 8080 など）は HTTP サービスとして `<service>.localhost:1355` 経由でアクセスできます。
+
 ## 前提条件
 
 - **Go 1.22+** — [ダウンロード](https://go.dev/dl/)
