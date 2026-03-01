@@ -124,7 +124,7 @@ func TestManager_UnregisterRoutes(t *testing.T) {
 		{Hostname: "frontend.localhost", HostPort: 40001, Directory: "/project-a"},
 		{Hostname: "api.localhost", HostPort: 40002, Directory: "/project-a"},
 	}
-	m.RegisterRoutes(routes)
+	_ = m.RegisterRoutes(routes)
 
 	removed, err := m.UnregisterRoutes("/project-a")
 	if err != nil {

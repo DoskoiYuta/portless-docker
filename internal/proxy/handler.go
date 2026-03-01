@@ -73,7 +73,7 @@ func (h *Handler) proxyTo(w http.ResponseWriter, r *http.Request, route state.Ro
 	proxy.ErrorHandler = func(w http.ResponseWriter, r *http.Request, err error) {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		w.WriteHeader(http.StatusBadGateway)
-		fmt.Fprintf(w, `<!DOCTYPE html>
+		_, _ = fmt.Fprintf(w, `<!DOCTYPE html>
 <html><head><title>502 Bad Gateway</title>
 <style>
 body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
@@ -91,7 +91,7 @@ code { background: #f4f4f4; padding: 2px 6px; border-radius: 3px; }
 }
 
 // notFound はアクティブルート一覧付きの404ページを返す。
-func (h *Handler) notFound(w http.ResponseWriter, r *http.Request, hostname string, routes []state.Route) {
+func (h *Handler) notFound(w http.ResponseWriter, _ *http.Request, hostname string, routes []state.Route) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(http.StatusNotFound)
 
@@ -109,7 +109,7 @@ func (h *Handler) notFound(w http.ResponseWriter, r *http.Request, hostname stri
 		routeList = "<p>アクティブルートはありません。</p>"
 	}
 
-	fmt.Fprintf(w, `<!DOCTYPE html>
+	_, _ = fmt.Fprintf(w, `<!DOCTYPE html>
 <html><head><title>404 Not Found</title>
 <style>
 body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }

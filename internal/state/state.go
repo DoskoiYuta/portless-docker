@@ -96,7 +96,7 @@ func (m *Manager) Load() (*State, error) {
 	if err := m.lock.Lock(); err != nil {
 		return nil, fmt.Errorf("ロック取得に失敗: %w", err)
 	}
-	defer m.lock.Unlock()
+	defer func() { _ = m.lock.Unlock() }()
 
 	return m.loadUnlocked()
 }
@@ -123,7 +123,7 @@ func (m *Manager) Save(s *State) error {
 	if err := m.lock.Lock(); err != nil {
 		return fmt.Errorf("ロック取得に失敗: %w", err)
 	}
-	defer m.lock.Unlock()
+	defer func() { _ = m.lock.Unlock() }()
 
 	return m.saveUnlocked(s)
 }
@@ -143,7 +143,7 @@ func (m *Manager) WithLock(fn func(s *State) error) error {
 	if err := m.lock.Lock(); err != nil {
 		return fmt.Errorf("ロック取得に失敗: %w", err)
 	}
-	defer m.lock.Unlock()
+	defer func() { _ = m.lock.Unlock() }()
 
 	s, err := m.loadUnlocked()
 	if err != nil {

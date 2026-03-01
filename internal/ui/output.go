@@ -59,11 +59,6 @@ var (
 	dirStyle = lipgloss.NewStyle().
 			Foreground(primaryColor).
 			Bold(true)
-
-	boxStyle = lipgloss.NewStyle().
-			Border(lipgloss.RoundedBorder()).
-			BorderForeground(primaryColor).
-			Padding(0, 1)
 )
 
 // RouteDisplay はルートの表示情報を保持する。
