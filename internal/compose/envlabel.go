@@ -27,7 +27,7 @@ type ServiceEndpoint struct {
 func ParseEnvLabels(composePath string) (map[string]map[string]string, error) {
 	data, err := os.ReadFile(composePath)
 	if err != nil {
-		return nil, fmt.Errorf("Composeファイルの読み込みに失敗: %w", err)
+		return nil, fmt.Errorf("composeファイルの読み込みに失敗: %w", err)
 	}
 
 	var raw struct {
@@ -36,7 +36,7 @@ func ParseEnvLabels(composePath string) (map[string]map[string]string, error) {
 		} `yaml:"services"`
 	}
 	if err := yaml.Unmarshal(data, &raw); err != nil {
-		return nil, fmt.Errorf("Composeファイルのパースに失敗: %w", err)
+		return nil, fmt.Errorf("composeファイルのパースに失敗: %w", err)
 	}
 
 	result := make(map[string]map[string]string)

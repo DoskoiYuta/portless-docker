@@ -221,7 +221,9 @@ func TestParseEnvLabels(t *testing.T) {
     labels:
       portless-docker.env.API_URL: "{{api.url}}"
 `
-	os.WriteFile(composePath, []byte(content), 0644)
+	if err := os.WriteFile(composePath, []byte(content), 0644); err != nil {
+		t.Fatalf("ファイル書き込み失敗: %v", err)
+	}
 
 	result, err := ParseEnvLabels(composePath)
 	if err != nil {
@@ -277,7 +279,7 @@ func TestGenerateOverrideWithEnvironment(t *testing.T) {
 	if err != nil {
 		t.Fatalf("予期しないエラー: %v", err)
 	}
-	defer RemoveOverride(path)
+	defer func() { _ = RemoveOverride(path) }()
 
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -320,7 +322,7 @@ func TestGenerateOverrideEnvOnly(t *testing.T) {
 	if err != nil {
 		t.Fatalf("予期しないエラー: %v", err)
 	}
-	defer RemoveOverride(path)
+	defer func() { _ = RemoveOverride(path) }()
 
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -349,7 +351,9 @@ func TestParseEnvLabels_NoLabels(t *testing.T) {
     ports:
       - "8080:8080"
 `
-	os.WriteFile(composePath, []byte(content), 0644)
+	if err := os.WriteFile(composePath, []byte(content), 0644); err != nil {
+		t.Fatalf("ファイル書き込み失敗: %v", err)
+	}
 
 	result, err := ParseEnvLabels(composePath)
 	if err != nil {
