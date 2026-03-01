@@ -107,20 +107,34 @@ func runPassthrough(args []string) error {
 		}
 		sort.Strings(serviceNames)
 
+		// プロジェクト名を決定論的ポート割り当てのキーに使用する。
+		projectName := filepath.Base(cwd)
+
 		for _, name := range serviceNames {
 			svc := cf.Services[name]
-			hostPort, err := allocator.Allocate()
+			serviceType := string(svc.Type)
+
+			var hostPort int
+			if svc.Type == compose.ServiceTypeTCP {
+				// TCP サービス: FNV-1a ハッシュによる決定論的ポート割り当て。
+				key := fmt.Sprintf("%s:%s:%d", projectName, name, svc.ContainerPort)
+				hostPort, err = allocator.AllocateDeterministic(key)
+			} else {
+				// HTTP サービス: 従来の空きポート順次割り当て。
+				hostPort, err = allocator.Allocate()
+			}
 			if err != nil {
 				return fmt.Errorf("%s のポート割り当てに失敗: %w", name, err)
 			}
 
-			hostname := compose.ServiceSubdomain(name) + ".localhost"
+			hostname := compose.BuildHostname(name, projectName)
 
 			routes = append(routes, state.Route{
 				Hostname:      hostname,
 				HostPort:      hostPort,
 				ContainerPort: svc.ContainerPort,
 				Service:       name,
+				Type:          serviceType,
 				Directory:     cwd,
 				ComposeFile:   composePath,
 			})
@@ -172,6 +186,7 @@ func runPassthrough(args []string) error {
 				HostPort:      r.HostPort,
 				ContainerPort: r.ContainerPort,
 				Service:       r.Service,
+				Type:          r.Type,
 			})
 		}
 		ui.PrintRoutes(displays, proxyPort)

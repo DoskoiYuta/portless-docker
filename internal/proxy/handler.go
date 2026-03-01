@@ -41,7 +41,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for _, route := range routes {
-		if route.Hostname == hostname {
+		if route.Hostname == hostname && route.Type != "tcp" {
 			h.proxyTo(w, r, route)
 			return
 		}

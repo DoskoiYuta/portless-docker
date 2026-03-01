@@ -10,6 +10,44 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// ServiceType はサービスのプロトコル種別を表す。
+type ServiceType string
+
+const (
+	// ServiceTypeHTTP は HTTP プロキシ経由でルーティングされるサービス。
+	ServiceTypeHTTP ServiceType = "http"
+	// ServiceTypeTCP はポートマッピングのみで直接アクセスされる TCP サービス。
+	ServiceTypeTCP ServiceType = "tcp"
+)
+
+// wellKnownTCPPorts は TCP として自動判定される well-known ポート。
+var wellKnownTCPPorts = map[int]bool{
+	3306:  true, // MySQL
+	5432:  true, // PostgreSQL
+	6379:  true, // Redis
+	27017: true, // MongoDB
+	9042:  true, // Cassandra
+	5672:  true, // RabbitMQ (AMQP)
+	11211: true, // Memcached
+	2181:  true, // ZooKeeper
+	9092:  true, // Kafka
+	6380:  true, // Redis (alt)
+	26379: true, // Redis Sentinel
+}
+
+// IsWellKnownTCPPort は指定ポートが well-known TCP ポートかどうかを判定する。
+func IsWellKnownTCPPort(port int) bool {
+	return wellKnownTCPPorts[port]
+}
+
+// ClassifyPort はコンテナポートからサービス種別を判定する。
+func ClassifyPort(containerPort int) ServiceType {
+	if IsWellKnownTCPPort(containerPort) {
+		return ServiceTypeTCP
+	}
+	return ServiceTypeHTTP
+}
+
 // ComposeFile はパース済みの docker-compose.yml を表す。
 type ComposeFile struct {
 	Path     string
@@ -22,6 +60,7 @@ type ServiceDef struct {
 	ContainerPort int
 	HostPort      int
 	RawPorts      []string
+	Type          ServiceType
 }
 
 // PortMapping はパース済みのポートマッピングを表す。
@@ -109,6 +148,7 @@ func Parse(composePath string, ignoredServices map[string]bool) (*ComposeFile, e
 			ContainerPort: pm.ContainerPort,
 			HostPort:      pm.HostPort,
 			RawPorts:      rawPorts,
+			Type:          ClassifyPort(pm.ContainerPort),
 		}
 	}
 
@@ -196,4 +236,10 @@ func ServiceSubdomain(name string) string {
 	s := strings.ReplaceAll(name, "_", "-")
 	s = strings.ToLower(s)
 	return s
+}
+
+// BuildHostname はサービス名とプロジェクト名からホスト名を生成する。
+// 形式: <service>.<project>.localhost
+func BuildHostname(serviceName, projectName string) string {
+	return ServiceSubdomain(serviceName) + "." + ServiceSubdomain(projectName) + ".localhost"
 }

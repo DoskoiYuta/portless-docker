@@ -2,6 +2,7 @@ package ports
 
 import (
 	"fmt"
+	"hash/fnv"
 	"net"
 )
 
@@ -30,6 +31,30 @@ func NewAllocator(usedPorts []int) *Allocator {
 // ポートにバインドして空いていることを確認した後、リリースする。
 func (a *Allocator) Allocate() (int, error) {
 	for port := MinPort; port <= MaxPort; port++ {
+		if a.used[port] {
+			continue
+		}
+		if isPortAvailable(port) {
+			a.used[port] = true
+			return port, nil
+		}
+	}
+	return 0, fmt.Errorf("範囲 %d-%d で利用可能なポートがありません", MinPort, MaxPort)
+}
+
+// AllocateDeterministic はキー文字列から決定論的にポートを割り当てる。
+// FNV-1a ハッシュを使い、同じキーなら常に同じポートを返す。
+// 衝突時はインクリメントして空きを探す。
+func (a *Allocator) AllocateDeterministic(key string) (int, error) {
+	h := fnv.New32a()
+	h.Write([]byte(key))
+	hash := h.Sum32()
+
+	portRange := uint32(MaxPort - MinPort + 1)
+	base := int(hash%portRange) + MinPort
+
+	for i := 0; i < int(portRange); i++ {
+		port := MinPort + (base-MinPort+i)%int(portRange)
 		if a.used[port] {
 			continue
 		}

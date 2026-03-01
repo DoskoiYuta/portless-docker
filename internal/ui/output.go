@@ -72,6 +72,7 @@ type RouteDisplay struct {
 	HostPort      int
 	ContainerPort int
 	Service       string
+	Type          string // "http" または "tcp"
 }
 
 // PrintBanner は portless-docker のバナーを表示する。
@@ -96,25 +97,43 @@ func PrintRoutes(routes []RouteDisplay, proxyPort int) {
 		return routes[i].Service < routes[j].Service
 	})
 
-	// 整列のため最大URL長を計算する。
-	maxURLLen := 0
+	// 整列のため最大表示文字列長を計算する。
+	maxLen := 0
 	for _, r := range routes {
-		url := fmt.Sprintf("http://%s:%d", r.URL, proxyPort)
-		if len(url) > maxURLLen {
-			maxURLLen = len(url)
+		var display string
+		if r.Type == "tcp" {
+			display = fmt.Sprintf("localhost:%d", r.HostPort)
+		} else {
+			display = fmt.Sprintf("http://%s:%d", r.URL, proxyPort)
+		}
+		if len(display) > maxLen {
+			maxLen = len(display)
 		}
 	}
 
 	for _, r := range routes {
-		url := fmt.Sprintf("http://%s:%d", r.URL, proxyPort)
-		padding := strings.Repeat(" ", maxURLLen-len(url))
-		fmt.Printf("  %s%s  %s  %s %s\n",
-			urlStyle.Render(url),
-			padding,
-			arrowStyle.Render("→"),
-			portStyle.Render(fmt.Sprintf(":%d", r.HostPort)),
-			containerPortStyle.Render(fmt.Sprintf("(コンテナ :%d)", r.ContainerPort)),
-		)
+		if r.Type == "tcp" {
+			display := fmt.Sprintf("localhost:%d", r.HostPort)
+			padding := strings.Repeat(" ", maxLen-len(display))
+			fmt.Printf("  %s  %s%s  %s  %s\n",
+				labelStyle.Render("[tcp]"),
+				portStyle.Render(display),
+				padding,
+				arrowStyle.Render("→"),
+				containerPortStyle.Render(fmt.Sprintf(":%d (%s)", r.ContainerPort, r.Service)),
+			)
+		} else {
+			url := fmt.Sprintf("http://%s:%d", r.URL, proxyPort)
+			padding := strings.Repeat(" ", maxLen-len(url))
+			fmt.Printf("  %s %s%s  %s  %s %s\n",
+				labelStyle.Render("[http]"),
+				urlStyle.Render(url),
+				padding,
+				arrowStyle.Render("→"),
+				portStyle.Render(fmt.Sprintf(":%d", r.HostPort)),
+				containerPortStyle.Render(fmt.Sprintf("(コンテナ :%d)", r.ContainerPort)),
+			)
+		}
 	}
 	fmt.Println()
 }
@@ -182,24 +201,42 @@ func PrintActiveRoutes(routes []state.Route, proxyPort int) {
 			return dirRoutes[i].Service < dirRoutes[j].Service
 		})
 
-		maxURLLen := 0
+		maxLen := 0
 		for _, r := range dirRoutes {
-			url := fmt.Sprintf("http://%s:%d", r.Hostname, proxyPort)
-			if len(url) > maxURLLen {
-				maxURLLen = len(url)
+			var display string
+			if r.Type == "tcp" {
+				display = fmt.Sprintf("localhost:%d", r.HostPort)
+			} else {
+				display = fmt.Sprintf("http://%s:%d", r.Hostname, proxyPort)
+			}
+			if len(display) > maxLen {
+				maxLen = len(display)
 			}
 		}
 
 		for _, r := range dirRoutes {
-			url := fmt.Sprintf("http://%s:%d", r.Hostname, proxyPort)
-			padding := strings.Repeat(" ", maxURLLen-len(url))
-			fmt.Printf("   %s%s  %s  %s %s\n",
-				urlStyle.Render(url),
-				padding,
-				arrowStyle.Render("→"),
-				portStyle.Render(fmt.Sprintf(":%d", r.HostPort)),
-				containerPortStyle.Render(fmt.Sprintf("(コンテナ :%d)", r.ContainerPort)),
-			)
+			if r.Type == "tcp" {
+				display := fmt.Sprintf("localhost:%d", r.HostPort)
+				padding := strings.Repeat(" ", maxLen-len(display))
+				fmt.Printf("   %s  %s%s  %s  %s\n",
+					labelStyle.Render("[tcp]"),
+					portStyle.Render(display),
+					padding,
+					arrowStyle.Render("→"),
+					containerPortStyle.Render(fmt.Sprintf(":%d (%s)", r.ContainerPort, r.Service)),
+				)
+			} else {
+				url := fmt.Sprintf("http://%s:%d", r.Hostname, proxyPort)
+				padding := strings.Repeat(" ", maxLen-len(url))
+				fmt.Printf("   %s %s%s  %s  %s %s\n",
+					labelStyle.Render("[http]"),
+					urlStyle.Render(url),
+					padding,
+					arrowStyle.Render("→"),
+					portStyle.Render(fmt.Sprintf(":%d", r.HostPort)),
+					containerPortStyle.Render(fmt.Sprintf("(コンテナ :%d)", r.ContainerPort)),
+				)
+			}
 		}
 		fmt.Println()
 	}
