@@ -38,7 +38,7 @@ func newStopCmd() *cobra.Command {
 			for _, r := range removed {
 				if r.OverridePath != "" && !seen[r.OverridePath] {
 					seen[r.OverridePath] = true
-					compose.RemoveOverride(r.OverridePath)
+					_ = compose.RemoveOverride(r.OverridePath)
 				}
 			}
 

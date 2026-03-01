@@ -95,7 +95,9 @@ func TestFindComposeFile(t *testing.T) {
 
 	// docker-compose.yml を作成
 	p := filepath.Join(dir, "docker-compose.yml")
-	os.WriteFile(p, []byte("services: {}"), 0644)
+	if err := os.WriteFile(p, []byte("services: {}"), 0644); err != nil {
+		t.Fatalf("ファイル書き込みエラー: %v", err)
+	}
 
 	found, err := FindComposeFile(dir, "")
 	if err != nil {
@@ -122,7 +124,9 @@ func TestParse(t *testing.T) {
   redis:
     image: redis
 `
-	os.WriteFile(composePath, []byte(content), 0644)
+	if err := os.WriteFile(composePath, []byte(content), 0644); err != nil {
+		t.Fatalf("ファイル書き込みエラー: %v", err)
+	}
 
 	cf, err := Parse(composePath, nil)
 	if err != nil {
@@ -177,7 +181,9 @@ func TestParseWithTCPServices(t *testing.T) {
     ports:
       - "3306:3306"
 `
-	os.WriteFile(composePath, []byte(content), 0644)
+	if err := os.WriteFile(composePath, []byte(content), 0644); err != nil {
+		t.Fatalf("ファイル書き込みエラー: %v", err)
+	}
 
 	cf, err := Parse(composePath, nil)
 	if err != nil {
@@ -246,7 +252,9 @@ func TestParseWithIgnore(t *testing.T) {
     ports:
       - "8080:8080"
 `
-	os.WriteFile(composePath, []byte(content), 0644)
+	if err := os.WriteFile(composePath, []byte(content), 0644); err != nil {
+		t.Fatalf("ファイル書き込みエラー: %v", err)
+	}
 
 	ignored := map[string]bool{"api": true}
 	cf, err := Parse(composePath, ignored)

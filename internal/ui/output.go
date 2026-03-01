@@ -12,13 +12,13 @@ import (
 
 var (
 	// カラー定義
-	primaryColor   = lipgloss.Color("#7C3AED") // 紫
-	successColor   = lipgloss.Color("#10B981") // 緑
-	warningColor   = lipgloss.Color("#F59E0B") // 琥珀
-	errorColor     = lipgloss.Color("#EF4444") // 赤
-	mutedColor     = lipgloss.Color("#6B7280") // グレー
-	linkColor      = lipgloss.Color("#3B82F6") // 青
-	whiteColor     = lipgloss.Color("#F9FAFB")
+	primaryColor = lipgloss.Color("#7C3AED") // 紫
+	successColor = lipgloss.Color("#10B981") // 緑
+	warningColor = lipgloss.Color("#F59E0B") // 琥珀
+	errorColor   = lipgloss.Color("#EF4444") // 赤
+	mutedColor   = lipgloss.Color("#6B7280") // グレー
+	linkColor    = lipgloss.Color("#3B82F6") // 青
+	whiteColor   = lipgloss.Color("#F9FAFB")
 
 	// スタイル定義
 	titleStyle = lipgloss.NewStyle().
@@ -59,11 +59,6 @@ var (
 	dirStyle = lipgloss.NewStyle().
 			Foreground(primaryColor).
 			Bold(true)
-
-	boxStyle = lipgloss.NewStyle().
-			Border(lipgloss.RoundedBorder()).
-			BorderForeground(primaryColor).
-			Padding(0, 1)
 )
 
 // RouteDisplay はルートの表示情報を保持する。

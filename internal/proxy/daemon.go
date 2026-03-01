@@ -52,7 +52,7 @@ func (d *Daemon) Start(proxyPort int) error {
 	}
 
 	if err := cmd.Start(); err != nil {
-		logFile.Close()
+		_ = logFile.Close()
 		return fmt.Errorf("プロキシデーモンの起動に失敗: %w", err)
 	}
 
@@ -66,8 +66,8 @@ func (d *Daemon) Start(proxyPort int) error {
 	}
 
 	// 親プロセス終了後もデーモンが継続するようプロセスを解放する。
-	cmd.Process.Release()
-	logFile.Close()
+	_ = cmd.Process.Release()
+	_ = logFile.Close()
 
 	// プロキシの準備完了を待機する。
 	if err := d.waitForReady(proxyPort, 5*time.Second); err != nil {
@@ -99,14 +99,14 @@ func (d *Daemon) Stop() error {
 	// プロセスの終了を待機する（タイムアウト付き）。
 	done := make(chan struct{})
 	go func() {
-		process.Wait()
+		_, _ = process.Wait()
 		close(done)
 	}()
 
 	select {
 	case <-done:
 	case <-time.After(5 * time.Second):
-		process.Kill()
+		_ = process.Kill()
 	}
 
 	d.cleanup()
@@ -154,8 +154,8 @@ func (d *Daemon) readPID() (int, error) {
 
 // cleanup はPIDファイルとポートファイルを削除する。
 func (d *Daemon) cleanup() {
-	os.Remove(d.stateManager.PIDPath())
-	os.Remove(d.stateManager.PortPath())
+	_ = os.Remove(d.stateManager.PIDPath())
+	_ = os.Remove(d.stateManager.PortPath())
 }
 
 // waitForReady はプロキシが接続を受け付けるまでポーリングする。
@@ -166,7 +166,7 @@ func (d *Daemon) waitForReady(port int, timeout time.Duration) error {
 	for time.Now().Before(deadline) {
 		conn, err := net.DialTimeout("tcp", addr, 200*time.Millisecond)
 		if err == nil {
-			conn.Close()
+			_ = conn.Close()
 			return nil
 		}
 		time.Sleep(100 * time.Millisecond)

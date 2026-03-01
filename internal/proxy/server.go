@@ -100,7 +100,7 @@ func (s *Server) selfCheck(ctx context.Context) {
 			}
 			if !has {
 				log.Println("残存ルートなし。プロキシをシャットダウンします。")
-				s.Shutdown()
+				_ = s.Shutdown()
 				return
 			}
 		}

@@ -53,16 +53,16 @@ func TestHandler_RouteMatch(t *testing.T) {
 	// テスト用バックエンドを作成する。
 	backend := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("OK"))
+		_, _ = w.Write([]byte("OK"))
 	}))
 	defer backend.Close()
 
 	// バックエンドのポートを取得する。
 	var backendPort int
-	fmt.Sscanf(backend.Listener.Addr().String(), "127.0.0.1:%d", &backendPort)
+	_, _ = fmt.Sscanf(backend.Listener.Addr().String(), "127.0.0.1:%d", &backendPort)
 
 	// ルートを登録する。
-	sm.RegisterRoutes([]state.Route{
+	_ = sm.RegisterRoutes([]state.Route{
 		{
 			Hostname:  "test.localhost",
 			HostPort:  backendPort,

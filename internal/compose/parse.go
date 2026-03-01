@@ -87,7 +87,7 @@ func FindComposeFile(dir, filePath string) (string, error) {
 			return "", fmt.Errorf("無効なパス: %w", err)
 		}
 		if _, err := os.Stat(abs); err != nil {
-			return "", fmt.Errorf("Composeファイルが見つかりません: %s", abs)
+			return "", fmt.Errorf("composeファイルが見つかりません: %s", abs)
 		}
 		return abs, nil
 	}
@@ -108,7 +108,7 @@ func FindComposeFile(dir, filePath string) (string, error) {
 func Parse(composePath string, ignoredServices map[string]bool) (*ComposeFile, error) {
 	data, err := os.ReadFile(composePath)
 	if err != nil {
-		return nil, fmt.Errorf("Composeファイルの読み込みに失敗: %w", err)
+		return nil, fmt.Errorf("composeファイルの読み込みに失敗: %w", err)
 	}
 
 	var raw struct {
@@ -117,7 +117,7 @@ func Parse(composePath string, ignoredServices map[string]bool) (*ComposeFile, e
 		} `yaml:"services"`
 	}
 	if err := yaml.Unmarshal(data, &raw); err != nil {
-		return nil, fmt.Errorf("Composeファイルのパースに失敗: %w", err)
+		return nil, fmt.Errorf("composeファイルのパースに失敗: %w", err)
 	}
 
 	cf := &ComposeFile{

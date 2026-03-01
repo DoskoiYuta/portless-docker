@@ -95,7 +95,7 @@ func Execute() {
 }
 
 // shouldPassthrough は引数を docker compose にパススルーすべきかどうかを判定する。
-func shouldPassthrough(rootCmd *cobra.Command, args []string) bool {
+func shouldPassthrough(_ *cobra.Command, args []string) bool {
 	if len(args) == 0 {
 		return false
 	}
@@ -176,7 +176,6 @@ func splitGlobalFlags(args []string) (globalFlags, passthroughArgs []string) {
 		}
 
 		// 最初の非フラグ引数がサブコマンド。
-		foundSubcmd = true
 		passthroughArgs = append(passthroughArgs, args[i:]...)
 		break
 	}

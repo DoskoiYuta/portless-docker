@@ -35,7 +35,7 @@ func (fl *FileLock) Lock() error {
 		if err == nil {
 			// 失効検出用のタイムスタンプファイルを書き込む。
 			ts := filepath.Join(fl.dir, "ts")
-			os.WriteFile(ts, []byte(time.Now().Format(time.RFC3339Nano)), 0644)
+			_ = os.WriteFile(ts, []byte(time.Now().Format(time.RFC3339Nano)), 0644)
 			return nil
 		}
 
@@ -45,7 +45,7 @@ func (fl *FileLock) Lock() error {
 
 		// ロックが失効していないか確認する。
 		if fl.isStale() {
-			os.RemoveAll(fl.dir)
+			_ = os.RemoveAll(fl.dir)
 			continue
 		}
 

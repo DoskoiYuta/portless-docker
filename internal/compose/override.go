@@ -36,7 +36,7 @@ func GenerateOverride(entries []OverrideEntry) (string, error) {
 	}
 
 	if err := os.WriteFile(overridePath, []byte(content), 0644); err != nil {
-		os.RemoveAll(tmpDir)
+		_ = os.RemoveAll(tmpDir)
 		return "", fmt.Errorf("オーバーライドファイルの書き込みに失敗: %w", err)
 	}
 

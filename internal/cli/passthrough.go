@@ -7,7 +7,6 @@ import (
 	"os/signal"
 	"path/filepath"
 	"sort"
-	"strings"
 	"syscall"
 
 	"github.com/spf13/cobra"
@@ -165,7 +164,7 @@ func runPassthrough(args []string) error {
 
 		// ルートを登録する。
 		if err := sm.RegisterRoutes(routes); err != nil {
-			compose.RemoveOverride(overridePath)
+			_ = compose.RemoveOverride(overridePath)
 			return err
 		}
 
@@ -248,7 +247,7 @@ func execDockerCompose(args []string) int {
 	go func() {
 		for sig := range sigCh {
 			if cmd.Process != nil {
-				cmd.Process.Signal(sig)
+				_ = cmd.Process.Signal(sig)
 			}
 		}
 	}()
@@ -267,10 +266,10 @@ func cleanup(sm *state.Manager, directory, overridePath string, routeCount int) 
 	ui.PrintStopping()
 
 	// ルートを登録解除する。
-	sm.UnregisterRoutes(directory)
+	_, _ = sm.UnregisterRoutes(directory)
 
 	// オーバーライドファイルを削除する。
-	compose.RemoveOverride(overridePath)
+	_ = compose.RemoveOverride(overridePath)
 
 	ui.PrintCleanup(routeCount)
 
@@ -279,7 +278,7 @@ func cleanup(sm *state.Manager, directory, overridePath string, routeCount int) 
 	if err == nil && !has {
 		daemon := proxy.NewDaemon(sm)
 		if daemon.IsRunning() {
-			daemon.Stop()
+			_ = daemon.Stop()
 			ui.PrintProxyStopped()
 		}
 	}
@@ -294,17 +293,6 @@ func isDetachedMode(args []string) bool {
 		if arg == "--" {
 			return false
 		}
-	}
-	return false
-}
-
-// isUpCommand はサブコマンドが "up" かどうかを確認する（最初の非フラグ引数）。
-func isUpCommand(args []string) bool {
-	for _, arg := range args {
-		if strings.HasPrefix(arg, "-") {
-			continue
-		}
-		return arg == "up"
 	}
 	return false
 }
