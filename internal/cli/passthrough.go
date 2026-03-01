@@ -22,7 +22,7 @@ func newPassthroughCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                "__passthrough",
 		Hidden:             true,
-		DisableFlagParsing: false,
+		DisableFlagParsing: true,
 		Args:               cobra.ArbitraryArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// パススルー引数を分離する（"--" の後）。
