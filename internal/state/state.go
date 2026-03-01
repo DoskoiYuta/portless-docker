@@ -22,6 +22,7 @@ type Route struct {
 	HostPort      int       `json:"hostPort"`
 	ContainerPort int       `json:"containerPort"`
 	Service       string    `json:"service"`
+	Type          string    `json:"type"` // "http" または "tcp"
 	Directory     string    `json:"directory"`
 	ComposeFile   string    `json:"composeFile"`
 	OverridePath  string    `json:"overridePath"`

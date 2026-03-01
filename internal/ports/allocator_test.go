@@ -37,3 +37,47 @@ func TestAllocator_WithUsedPorts(t *testing.T) {
 		t.Errorf("使用済みとしてマークされたポート %d が割り当てられた", port)
 	}
 }
+
+func TestAllocator_AllocateDeterministic(t *testing.T) {
+	a1 := NewAllocator(nil)
+	a2 := NewAllocator(nil)
+
+	key := "myproject:postgres:5432"
+
+	port1, err := a1.AllocateDeterministic(key)
+	if err != nil {
+		t.Fatalf("予期しないエラー: %v", err)
+	}
+	if port1 < MinPort || port1 > MaxPort {
+		t.Errorf("ポート %d が範囲 [%d, %d] 外", port1, MinPort, MaxPort)
+	}
+
+	port2, err := a2.AllocateDeterministic(key)
+	if err != nil {
+		t.Fatalf("予期しないエラー: %v", err)
+	}
+
+	// 同じキーなら同じポートが返されるべき。
+	if port1 != port2 {
+		t.Errorf("同じキーで異なるポート: %d != %d", port1, port2)
+	}
+}
+
+func TestAllocator_DeterministicDifferentKeys(t *testing.T) {
+	a := NewAllocator(nil)
+
+	port1, err := a.AllocateDeterministic("project-a:postgres:5432")
+	if err != nil {
+		t.Fatalf("予期しないエラー: %v", err)
+	}
+
+	port2, err := a.AllocateDeterministic("project-b:postgres:5432")
+	if err != nil {
+		t.Fatalf("予期しないエラー: %v", err)
+	}
+
+	// 異なるキーなら異なるポートが返されるべき。
+	if port1 == port2 {
+		t.Errorf("異なるキーで同じポート: %d", port1)
+	}
+}

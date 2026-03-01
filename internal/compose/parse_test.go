@@ -118,6 +118,9 @@ func TestParse(t *testing.T) {
 	if fe.ContainerPort != 3000 {
 		t.Errorf("frontend ContainerPort = %d, 期待値 3000", fe.ContainerPort)
 	}
+	if fe.Type != ServiceTypeHTTP {
+		t.Errorf("frontend Type = %q, 期待値 %q", fe.Type, ServiceTypeHTTP)
+	}
 
 	api, ok := cf.Services["api"]
 	if !ok {
@@ -125,6 +128,87 @@ func TestParse(t *testing.T) {
 	}
 	if api.ContainerPort != 8080 {
 		t.Errorf("api ContainerPort = %d, 期待値 8080", api.ContainerPort)
+	}
+	if api.Type != ServiceTypeHTTP {
+		t.Errorf("api Type = %q, 期待値 %q", api.Type, ServiceTypeHTTP)
+	}
+}
+
+func TestParseWithTCPServices(t *testing.T) {
+	dir := t.TempDir()
+	composePath := filepath.Join(dir, "docker-compose.yml")
+
+	content := `services:
+  api:
+    ports:
+      - "8080:8080"
+  postgres:
+    image: postgres
+    ports:
+      - "5432:5432"
+  redis:
+    image: redis
+    ports:
+      - "6379:6379"
+  mysql:
+    image: mysql
+    ports:
+      - "3306:3306"
+`
+	os.WriteFile(composePath, []byte(content), 0644)
+
+	cf, err := Parse(composePath, nil)
+	if err != nil {
+		t.Fatalf("予期しないエラー: %v", err)
+	}
+
+	if len(cf.Services) != 4 {
+		t.Fatalf("4サービスを期待したが %d を取得", len(cf.Services))
+	}
+
+	tests := []struct {
+		name     string
+		wantType ServiceType
+	}{
+		{"api", ServiceTypeHTTP},
+		{"postgres", ServiceTypeTCP},
+		{"redis", ServiceTypeTCP},
+		{"mysql", ServiceTypeTCP},
+	}
+
+	for _, tt := range tests {
+		svc, ok := cf.Services[tt.name]
+		if !ok {
+			t.Errorf("%s サービスが見つかりません", tt.name)
+			continue
+		}
+		if svc.Type != tt.wantType {
+			t.Errorf("%s Type = %q, 期待値 %q", tt.name, svc.Type, tt.wantType)
+		}
+	}
+}
+
+func TestClassifyPort(t *testing.T) {
+	tests := []struct {
+		port     int
+		wantType ServiceType
+	}{
+		{80, ServiceTypeHTTP},
+		{3000, ServiceTypeHTTP},
+		{8080, ServiceTypeHTTP},
+		{443, ServiceTypeHTTP},
+		{5432, ServiceTypeTCP},
+		{3306, ServiceTypeTCP},
+		{6379, ServiceTypeTCP},
+		{27017, ServiceTypeTCP},
+		{9092, ServiceTypeTCP},
+	}
+
+	for _, tt := range tests {
+		got := ClassifyPort(tt.port)
+		if got != tt.wantType {
+			t.Errorf("ClassifyPort(%d) = %q, 期待値 %q", tt.port, got, tt.wantType)
+		}
 	}
 }
 
