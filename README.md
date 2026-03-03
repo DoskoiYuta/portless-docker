@@ -63,18 +63,30 @@ Browser: http://frontend.localhost:1355
 
 ## インストール
 
+### バイナリをダウンロード（推奨）
+
+[Releases ページ](https://github.com/DoskoiYuta/portless-docker/releases/latest)からお使いの OS・アーキテクチャに合ったバイナリをダウンロードできます。
+
 ```bash
-# ソースからビルド
+# 例: macOS (Apple Silicon)
+curl -L https://github.com/DoskoiYuta/portless-docker/releases/latest/download/portless-docker-darwin-arm64 -o portless-docker
+chmod +x portless-docker
+sudo mv portless-docker /usr/local/bin/
+```
+
+### go install
+
+```bash
+go install github.com/DoskoiYuta/portless-docker/cmd/portless-docker@latest
+```
+
+### ソースからビルド
+
+```bash
 git clone https://github.com/DoskoiYuta/portless-docker.git
 cd portless-docker
 make build
-# → dist/portless-docker
-
-# PATH に配置
 sudo cp dist/portless-docker /usr/local/bin/
-
-# または go install
-go install github.com/DoskoiYuta/portless-docker/cmd/portless-docker@latest
 ```
 
 ## クイックスタート
