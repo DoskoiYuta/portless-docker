@@ -10,7 +10,7 @@ Docker Compose 環境向けの `.localhost` サブドメインルーター。
 
 | 課題 | 従来 | portless-docker |
 |------|------|-----------------|
-| ポート番号の記憶 | `localhost:3000` は何？ | `frontend.localhost` で明確 |
+| ポート番号の記憶 | `localhost:3000` は何？ | `frontend.myapp.localhost` で明確 |
 | 複数プロジェクトのポート競合 | `EADDRINUSE` | 自動で空きポートに振り分け |
 | Cookie / Storage 汚染 | `localhost` 上で混在 | サブドメインごとに分離 |
 | チームへの影響 | 設定ファイル追加が必要 | **追加ファイルなし** |
@@ -18,13 +18,13 @@ Docker Compose 環境向けの `.localhost` サブドメインルーター。
 ## 仕組み
 
 ```
-Browser: http://frontend.localhost:1355
+Browser: http://frontend.myapp.localhost:1355
                     │
          .localhost → 127.0.0.1 (RFC 6761, DNS 設定不要)
                     │
         portless-docker proxy (:1355)
-         frontend.localhost → :41023
-         api.localhost      → :41056
+         frontend.myapp.localhost → :41023
+         api.myapp.localhost      → :41056
                 │                │
           Docker frontend  Docker api
            :41023 (内部3000) :41056 (内部8080)
@@ -33,7 +33,7 @@ Browser: http://frontend.localhost:1355
 1. `docker-compose.yml` からサービスとポートを自動検出
 2. 空きポート（40000-49999）を動的に割り当て
 3. 一時オーバーライドファイルを `/tmp` に生成
-4. ポート 1355 のリバースプロキシで `<service>.localhost` をルーティング
+4. ポート 1355 のリバースプロキシで `<service>.<project>.localhost` をルーティング
 5. `docker compose` を元ファイル + オーバーライドで実行
 6. 終了時に自動クリーンアップ
 
@@ -54,7 +54,7 @@ Browser: http://frontend.localhost:1355
 | 2181 | ZooKeeper |
 | 9092 | Kafka |
 
-それ以外のポート（80, 3000, 8080 など）は HTTP サービスとして `<service>.localhost:1355` 経由でアクセスできます。
+それ以外のポート（80, 3000, 8080 など）は HTTP サービスとして `<service>.<project>.localhost:1355` 経由でアクセスできます。`<project>` はディレクトリ名から自動的に決定されます（アンダースコアはハイフンに、大文字は小文字に変換）。
 
 ## 前提条件
 
@@ -97,9 +97,9 @@ sudo cp dist/portless-docker /usr/local/bin/
 # サービスを起動（docker compose up の代わり）
 portless-docker up
 
-# ブラウザでアクセス:
-#   http://frontend.localhost:1355
-#   http://api.localhost:1355
+# ブラウザでアクセス（ディレクトリ名が myapp の場合）:
+#   http://frontend.myapp.localhost:1355
+#   http://api.myapp.localhost:1355
 ```
 
 ## 使い方
@@ -169,9 +169,9 @@ services:
 
 | プレースホルダー | 値 |
 |---------------|---|
-| `{{service.host}}` | `service.localhost` |
+| `{{service.host}}` | `service.project.localhost` |
 | `{{service.port}}` | プロキシのリッスンポート |
-| `{{service.url}}` | `http://service.localhost:1355` |
+| `{{service.url}}` | `http://service.project.localhost:1355` |
 
 ## 状態ファイル
 
@@ -200,8 +200,8 @@ portless-docker stop --all
 `.localhost` がブラウザで解決しない場合は `/etc/hosts` に追加:
 
 ```
-127.0.0.1  frontend.localhost
-127.0.0.1  api.localhost
+127.0.0.1  frontend.myapp.localhost
+127.0.0.1  api.myapp.localhost
 ```
 
 ## 開発
