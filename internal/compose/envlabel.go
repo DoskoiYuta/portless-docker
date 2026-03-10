@@ -86,7 +86,8 @@ func extractEnvLabels(labels interface{}) map[string]string {
 
 // ResolveEnvTemplate は {{service.property}} プレースホルダーを解決する。
 // 対応プロパティ: url, host, port
-func ResolveEnvTemplate(tmpl string, endpoints map[string]ServiceEndpoint) (string, error) {
+// 特殊テンプレート: {{proxy.port}} はプロキシのリッスンポートに解決される。
+func ResolveEnvTemplate(tmpl string, endpoints map[string]ServiceEndpoint, proxyPort int) (string, error) {
 	var resolveErr error
 
 	result := templatePattern.ReplaceAllStringFunc(tmpl, func(match string) string {
@@ -96,6 +97,15 @@ func ResolveEnvTemplate(tmpl string, endpoints map[string]ServiceEndpoint) (stri
 
 		parts := templatePattern.FindStringSubmatch(match)
 		service, prop := parts[1], parts[2]
+
+		// proxy は予約名としてプロキシポートを提供する。
+		if service == "proxy" {
+			if prop == "port" {
+				return strconv.Itoa(proxyPort)
+			}
+			resolveErr = fmt.Errorf("proxy の未対応プロパティ %q（テンプレート: %s、対応: port）", prop, tmpl)
+			return match
+		}
 
 		ep, ok := endpoints[service]
 		if !ok {
@@ -124,13 +134,13 @@ func ResolveEnvTemplate(tmpl string, endpoints map[string]ServiceEndpoint) (stri
 
 // ResolveAllEnvLabels は全サービスの環境変数テンプレートを解決する。
 // 戻り値: map[サービス名]map[環境変数名]解決済み値
-func ResolveAllEnvLabels(labels map[string]map[string]string, endpoints map[string]ServiceEndpoint) (map[string]map[string]string, error) {
+func ResolveAllEnvLabels(labels map[string]map[string]string, endpoints map[string]ServiceEndpoint, proxyPort int) (map[string]map[string]string, error) {
 	result := make(map[string]map[string]string)
 
 	for svcName, templates := range labels {
 		resolved := make(map[string]string)
 		for envVar, tmpl := range templates {
-			val, err := ResolveEnvTemplate(tmpl, endpoints)
+			val, err := ResolveEnvTemplate(tmpl, endpoints, proxyPort)
 			if err != nil {
 				return nil, fmt.Errorf("サービス %q の %s の解決に失敗: %w", svcName, envVar, err)
 			}
