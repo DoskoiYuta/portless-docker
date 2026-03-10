@@ -170,8 +170,11 @@ services:
 | プレースホルダー | 値 |
 |---------------|---|
 | `{{service.host}}` | `service.project.localhost` |
-| `{{service.port}}` | プロキシのリッスンポート |
-| `{{service.url}}` | `http://service.project.localhost:1355` |
+| `{{service.port}}` | プロキシのリッスンポート（HTTP）/ 割り当てポート（TCP） |
+| `{{service.url}}` | `http://service.project.localhost:1355`（HTTP）/ `localhost:4xxxx`（TCP） |
+| `{{proxy.port}}` | portless-docker プロキシのリッスンポート（デフォルト `1355`） |
+
+`proxy` は予約名です。`-p` フラグでプロキシポートを変更した場合も `{{proxy.port}}` に反映されます。
 
 ## 状態ファイル
 

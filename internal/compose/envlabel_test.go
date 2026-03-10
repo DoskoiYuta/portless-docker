@@ -70,56 +70,89 @@ func TestResolveEnvTemplate(t *testing.T) {
 	}
 
 	tests := []struct {
-		name    string
-		tmpl    string
-		want    string
-		wantErr bool
+		name      string
+		tmpl      string
+		proxyPort int
+		want      string
+		wantErr   bool
 	}{
 		{
-			name: "HTTP url",
-			tmpl: "{{api.url}}",
-			want: "http://api.myproject.localhost:1355",
+			name:      "HTTP url",
+			tmpl:      "{{api.url}}",
+			proxyPort: 1355,
+			want:      "http://api.myproject.localhost:1355",
 		},
 		{
-			name: "HTTP host and port",
-			tmpl: "http://{{api.host}}:{{api.port}}/v1",
-			want: "http://api.myproject.localhost:1355/v1",
+			name:      "HTTP host and port",
+			tmpl:      "http://{{api.host}}:{{api.port}}/v1",
+			proxyPort: 1355,
+			want:      "http://api.myproject.localhost:1355/v1",
 		},
 		{
-			name: "TCP url",
-			tmpl: "{{postgres.url}}",
-			want: "localhost:40123",
+			name:      "TCP url",
+			tmpl:      "{{postgres.url}}",
+			proxyPort: 1355,
+			want:      "localhost:40123",
 		},
 		{
-			name: "TCP port only",
-			tmpl: "{{postgres.port}}",
-			want: "40123",
+			name:      "TCP port only",
+			tmpl:      "{{postgres.port}}",
+			proxyPort: 1355,
+			want:      "40123",
 		},
 		{
-			name: "mixed services",
-			tmpl: "http://{{api.host}}:{{api.port}}?db_port={{postgres.port}}",
-			want: "http://api.myproject.localhost:1355?db_port=40123",
+			name:      "mixed services",
+			tmpl:      "http://{{api.host}}:{{api.port}}?db_port={{postgres.port}}",
+			proxyPort: 1355,
+			want:      "http://api.myproject.localhost:1355?db_port=40123",
 		},
 		{
-			name: "no placeholders",
-			tmpl: "http://localhost:3000",
-			want: "http://localhost:3000",
+			name:      "no placeholders",
+			tmpl:      "http://localhost:3000",
+			proxyPort: 1355,
+			want:      "http://localhost:3000",
 		},
 		{
-			name:    "unknown service",
-			tmpl:    "{{unknown.url}}",
-			wantErr: true,
+			name:      "unknown service",
+			tmpl:      "{{unknown.url}}",
+			proxyPort: 1355,
+			wantErr:   true,
 		},
 		{
-			name:    "unknown property",
-			tmpl:    "{{api.unknown}}",
-			wantErr: true,
+			name:      "unknown property",
+			tmpl:      "{{api.unknown}}",
+			proxyPort: 1355,
+			wantErr:   true,
+		},
+		{
+			name:      "proxy port",
+			tmpl:      "http://{{api.host}}:{{proxy.port}}/v1",
+			proxyPort: 1355,
+			want:      "http://api.myproject.localhost:1355/v1",
+		},
+		{
+			name:      "proxy port with custom port",
+			tmpl:      "http://{{api.host}}:{{proxy.port}}/v1",
+			proxyPort: 9999,
+			want:      "http://api.myproject.localhost:9999/v1",
+		},
+		{
+			name:      "proxy port only",
+			tmpl:      "{{proxy.port}}",
+			proxyPort: 2000,
+			want:      "2000",
+		},
+		{
+			name:      "proxy unsupported property",
+			tmpl:      "{{proxy.host}}",
+			proxyPort: 1355,
+			wantErr:   true,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := ResolveEnvTemplate(tt.tmpl, endpoints)
+			got, err := ResolveEnvTemplate(tt.tmpl, endpoints, tt.proxyPort)
 			if tt.wantErr {
 				if err == nil {
 					t.Errorf("エラーを期待したがnil")
@@ -160,7 +193,7 @@ func TestResolveAllEnvLabels(t *testing.T) {
 		},
 	}
 
-	result, err := ResolveAllEnvLabels(labels, endpoints)
+	result, err := ResolveAllEnvLabels(labels, endpoints, 1355)
 	if err != nil {
 		t.Fatalf("予期しないエラー: %v", err)
 	}
@@ -189,7 +222,7 @@ func TestResolveAllEnvLabels_Error(t *testing.T) {
 
 	endpoints := map[string]ServiceEndpoint{}
 
-	_, err := ResolveAllEnvLabels(labels, endpoints)
+	_, err := ResolveAllEnvLabels(labels, endpoints, 1355)
 	if err == nil {
 		t.Error("エラーを期待したがnil")
 	}

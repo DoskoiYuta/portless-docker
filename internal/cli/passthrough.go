@@ -165,7 +165,7 @@ func runPassthrough(args []string) error {
 				endpoints[r.Service] = ep
 			}
 
-			resolved, err := compose.ResolveAllEnvLabels(envLabels, endpoints)
+			resolved, err := compose.ResolveAllEnvLabels(envLabels, endpoints, proxyPort)
 			if err != nil {
 				return err
 			}
