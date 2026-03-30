@@ -58,7 +58,7 @@ func TestExtractEnvLabels_Nil(t *testing.T) {
 func TestResolveEnvTemplate(t *testing.T) {
 	endpoints := map[string]ServiceEndpoint{
 		"api": {
-			Hostname: "api.myproject.localhost",
+			Hostname: "api.myproject.localtest.me",
 			Port:     1355,
 			Type:     ServiceTypeHTTP,
 		},
@@ -80,13 +80,13 @@ func TestResolveEnvTemplate(t *testing.T) {
 			name:      "HTTP url",
 			tmpl:      "{{api.url}}",
 			proxyPort: 1355,
-			want:      "http://api.myproject.localhost:1355",
+			want:      "http://api.myproject.localtest.me:1355",
 		},
 		{
 			name:      "HTTP host and port",
 			tmpl:      "http://{{api.host}}:{{api.port}}/v1",
 			proxyPort: 1355,
-			want:      "http://api.myproject.localhost:1355/v1",
+			want:      "http://api.myproject.localtest.me:1355/v1",
 		},
 		{
 			name:      "TCP url",
@@ -104,7 +104,7 @@ func TestResolveEnvTemplate(t *testing.T) {
 			name:      "mixed services",
 			tmpl:      "http://{{api.host}}:{{api.port}}?db_port={{postgres.port}}",
 			proxyPort: 1355,
-			want:      "http://api.myproject.localhost:1355?db_port=40123",
+			want:      "http://api.myproject.localtest.me:1355?db_port=40123",
 		},
 		{
 			name:      "no placeholders",
@@ -128,13 +128,13 @@ func TestResolveEnvTemplate(t *testing.T) {
 			name:      "proxy port",
 			tmpl:      "http://{{api.host}}:{{proxy.port}}/v1",
 			proxyPort: 1355,
-			want:      "http://api.myproject.localhost:1355/v1",
+			want:      "http://api.myproject.localtest.me:1355/v1",
 		},
 		{
 			name:      "proxy port with custom port",
 			tmpl:      "http://{{api.host}}:{{proxy.port}}/v1",
 			proxyPort: 9999,
-			want:      "http://api.myproject.localhost:9999/v1",
+			want:      "http://api.myproject.localtest.me:9999/v1",
 		},
 		{
 			name:      "proxy port only",
@@ -182,7 +182,7 @@ func TestResolveAllEnvLabels(t *testing.T) {
 
 	endpoints := map[string]ServiceEndpoint{
 		"api": {
-			Hostname: "api.myproject.localhost",
+			Hostname: "api.myproject.localtest.me",
 			Port:     1355,
 			Type:     ServiceTypeHTTP,
 		},
@@ -202,10 +202,10 @@ func TestResolveAllEnvLabels(t *testing.T) {
 		t.Fatalf("2サービスを期待したが %d を取得", len(result))
 	}
 
-	if result["frontend"]["API_URL"] != "http://api.myproject.localhost:1355/v1" {
+	if result["frontend"]["API_URL"] != "http://api.myproject.localtest.me:1355/v1" {
 		t.Errorf("frontend API_URL = %q", result["frontend"]["API_URL"])
 	}
-	if result["frontend"]["WS_URL"] != "ws://api.myproject.localhost:1355/ws" {
+	if result["frontend"]["WS_URL"] != "ws://api.myproject.localtest.me:1355/ws" {
 		t.Errorf("frontend WS_URL = %q", result["frontend"]["WS_URL"])
 	}
 	if result["worker"]["DB_PORT"] != "40123" {
@@ -297,8 +297,8 @@ func TestGenerateOverrideWithEnvironment(t *testing.T) {
 			HostPort:      40001,
 			ContainerPort: 3000,
 			Environment: map[string]string{
-				"API_URL": "http://api.myproject.localhost:1355/v1",
-				"WS_URL":  "ws://api.myproject.localhost:1355/ws",
+				"API_URL": "http://api.myproject.localtest.me:1355/v1",
+				"WS_URL":  "ws://api.myproject.localtest.me:1355/ws",
 			},
 		},
 		{
@@ -336,7 +336,7 @@ func TestGenerateOverrideWithEnvironment(t *testing.T) {
 	if !strings.Contains(content, "WS_URL:") {
 		t.Error("WS_URL が見つかりません")
 	}
-	if !strings.Contains(content, "api.myproject.localhost:1355/v1") {
+	if !strings.Contains(content, "api.myproject.localtest.me:1355/v1") {
 		t.Error("解決済みAPI_URL値が見つかりません")
 	}
 }
@@ -346,7 +346,7 @@ func TestGenerateOverrideEnvOnly(t *testing.T) {
 		{
 			ServiceName: "worker",
 			Environment: map[string]string{
-				"API_URL": "http://api.myproject.localhost:1355",
+				"API_URL": "http://api.myproject.localtest.me:1355",
 			},
 		},
 	}

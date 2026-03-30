@@ -24,9 +24,9 @@ var (
 func NewRootCmd() *cobra.Command {
 	rootCmd := &cobra.Command{
 		Use:   "portless-docker",
-		Short: "Docker Compose の .localhost サブドメインルーター",
+		Short: "Docker Compose の .localtest.me サブドメインルーター",
 		Long: `portless-docker は docker-compose.yml からポートマッピングを自動検出し、
-動的ホストポートを割り当て、.localhost サブドメイン経由でトラフィックをルーティングします。
+動的ホストポートを割り当て、.localtest.me サブドメイン経由でトラフィックをルーティングします。
 
 設定ファイル不要。"docker compose" の代わりに "portless-docker" を使うだけです。`,
 		Version:            fmt.Sprintf("%s (commit: %s)", Version, Commit),

@@ -40,9 +40,9 @@ cd ~/my-project
 # Start services (replaces "docker compose up")
 portless-docker up
 
-# Access services via .localhost subdomains:
-#   http://frontend.localhost:1355
-#   http://api.localhost:1355
+# Access services via .localtest.me subdomains:
+#   http://frontend.localtest.me:1355
+#   http://api.localtest.me:1355
 ```
 
 ## Usage
@@ -104,13 +104,13 @@ portless-docker --ignore redis,postgres up -d
 1. Parses `docker-compose.yml` to detect services with port mappings
 2. Assigns dynamic host ports (range 40000–49999) to avoid conflicts
 3. Generates a temporary override file in `/tmp/portless-docker-XXXX/`
-4. Starts a reverse proxy on port 1355 that routes `<service>.localhost` subdomains
+4. Starts a reverse proxy on port 1355 that routes `<service>.localtest.me` subdomains
 5. Runs `docker compose` with both the original and override compose files
 6. Cleans up automatically on exit
 
-### `.localhost` DNS
+### `.localtest.me` DNS
 
-Modern browsers resolve `*.localhost` to `127.0.0.1` per [RFC 6761](https://datatracker.ietf.org/doc/html/rfc6761). No `/etc/hosts` changes or DNS configuration needed.
+[localtest.me](http://readme.localtest.me/) はパブリック DNS サービスで、すべてのサブドメイン（`*.localtest.me`）が `127.0.0.1` に解決されます。`/etc/hosts` の変更や DNS 設定は一切不要で、Safari/WebKit を含むすべてのブラウザで動作します。
 
 ## State Files
 
@@ -165,11 +165,6 @@ Stop everything and clean up:
 portless-docker stop --all
 ```
 
-### `.localhost` not resolving in browser
+### `.localtest.me` not resolving in browser
 
-Most modern browsers support `.localhost` natively. If not, add entries to `/etc/hosts`:
-
-```
-127.0.0.1  frontend.localhost
-127.0.0.1  api.localhost
-```
+`.localtest.me` はパブリック DNS サービスを利用しているため、インターネット接続があればすべてのブラウザで `127.0.0.1` に解決されます。解決しない場合はインターネット接続を確認してください。

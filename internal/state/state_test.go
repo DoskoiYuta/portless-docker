@@ -31,7 +31,7 @@ func TestManager_LoadSave(t *testing.T) {
 	}
 
 	// 保存して再読み込みする。
-	s.Routes = []Route{{Hostname: "test.localhost", HostPort: 40001}}
+	s.Routes = []Route{{Hostname: "test.localtest.me", HostPort: 40001}}
 	if err := m.Save(s); err != nil {
 		t.Fatalf("保存エラー: %v", err)
 	}
@@ -43,8 +43,8 @@ func TestManager_LoadSave(t *testing.T) {
 	if len(s2.Routes) != 1 {
 		t.Fatalf("1ルートを期待したが %d を取得", len(s2.Routes))
 	}
-	if s2.Routes[0].Hostname != "test.localhost" {
-		t.Errorf("test.localhost を期待したが %s を取得", s2.Routes[0].Hostname)
+	if s2.Routes[0].Hostname != "test.localtest.me" {
+		t.Errorf("test.localtest.me を期待したが %s を取得", s2.Routes[0].Hostname)
 	}
 }
 
@@ -52,8 +52,8 @@ func TestManager_RegisterRoutes(t *testing.T) {
 	m := setupTestManager(t)
 
 	routes := []Route{
-		{Hostname: "frontend.localhost", HostPort: 40001, Service: "frontend", Directory: "/project-a"},
-		{Hostname: "api.localhost", HostPort: 40002, Service: "api", Directory: "/project-a"},
+		{Hostname: "frontend.localtest.me", HostPort: 40001, Service: "frontend", Directory: "/project-a"},
+		{Hostname: "api.localtest.me", HostPort: 40002, Service: "api", Directory: "/project-a"},
 	}
 
 	if err := m.RegisterRoutes(routes); err != nil {
@@ -73,14 +73,14 @@ func TestManager_HostnameConflict(t *testing.T) {
 	m := setupTestManager(t)
 
 	routes1 := []Route{
-		{Hostname: "frontend.localhost", HostPort: 40001, Directory: "/project-a"},
+		{Hostname: "frontend.localtest.me", HostPort: 40001, Directory: "/project-a"},
 	}
 	if err := m.RegisterRoutes(routes1); err != nil {
 		t.Fatalf("登録エラー: %v", err)
 	}
 
 	routes2 := []Route{
-		{Hostname: "frontend.localhost", HostPort: 40002, Directory: "/project-b"},
+		{Hostname: "frontend.localtest.me", HostPort: 40002, Directory: "/project-b"},
 	}
 	err := m.RegisterRoutes(routes2)
 	if err == nil {
@@ -92,14 +92,14 @@ func TestManager_OverwriteSameDirectory(t *testing.T) {
 	m := setupTestManager(t)
 
 	routes1 := []Route{
-		{Hostname: "frontend.localhost", HostPort: 40001, Directory: "/project-a"},
+		{Hostname: "frontend.localtest.me", HostPort: 40001, Directory: "/project-a"},
 	}
 	if err := m.RegisterRoutes(routes1); err != nil {
 		t.Fatalf("登録エラー: %v", err)
 	}
 
 	routes2 := []Route{
-		{Hostname: "frontend.localhost", HostPort: 40099, Directory: "/project-a"},
+		{Hostname: "frontend.localtest.me", HostPort: 40099, Directory: "/project-a"},
 	}
 	if err := m.RegisterRoutes(routes2); err != nil {
 		t.Fatalf("上書きエラー: %v", err)
@@ -121,8 +121,8 @@ func TestManager_UnregisterRoutes(t *testing.T) {
 	m := setupTestManager(t)
 
 	routes := []Route{
-		{Hostname: "frontend.localhost", HostPort: 40001, Directory: "/project-a"},
-		{Hostname: "api.localhost", HostPort: 40002, Directory: "/project-a"},
+		{Hostname: "frontend.localtest.me", HostPort: 40001, Directory: "/project-a"},
+		{Hostname: "api.localtest.me", HostPort: 40002, Directory: "/project-a"},
 	}
 	_ = m.RegisterRoutes(routes)
 
