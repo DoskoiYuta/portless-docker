@@ -37,7 +37,7 @@ func TestHandler_NoRoute(t *testing.T) {
 	h, _ := setupTestHandler(t)
 
 	req := httptest.NewRequest("GET", "/", nil)
-	req.Host = "unknown.localhost:1355"
+	req.Host = "unknown.localtest.me:1355"
 	w := httptest.NewRecorder()
 
 	h.ServeHTTP(w, req)
@@ -64,7 +64,7 @@ func TestHandler_RouteMatch(t *testing.T) {
 	// ルートを登録する。
 	_ = sm.RegisterRoutes([]state.Route{
 		{
-			Hostname:  "test.localhost",
+			Hostname:  "test.localtest.me",
 			HostPort:  backendPort,
 			Service:   "test",
 			Directory: "/test",
@@ -72,7 +72,7 @@ func TestHandler_RouteMatch(t *testing.T) {
 	})
 
 	req := httptest.NewRequest("GET", "/", nil)
-	req.Host = "test.localhost:1355"
+	req.Host = "test.localtest.me:1355"
 	w := httptest.NewRecorder()
 
 	h.ServeHTTP(w, req)

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-portless-docker は Go 製の CLI ツールで、Docker Compose 環境向けの `.localhost` サブドメインルーターです。`docker-compose.yml` からポートマッピングを自動検出し、動的ホストポート（40000-49999）を割り当て、一時的なオーバーライドファイルを生成し、ポート 1355 でリバースプロキシ経由のルーティングを行います。
+portless-docker は Go 製の CLI ツールで、Docker Compose 環境向けの `.localtest.me` サブドメインルーターです。`docker-compose.yml` からポートマッピングを自動検出し、動的ホストポート（40000-49999）を割り当て、一時的なオーバーライドファイルを生成し、ポート 1355 でリバースプロキシ経由のルーティングを行います。
 
 ## Build & Development Commands
 
@@ -34,7 +34,7 @@ CLI (Cobra) → Compose Parser → Port Allocator → Override Generator → Pro
 - **`internal/cli/`** — Cobra ベースの CLI コマンド。`passthrough.go` が中核で、未知のコマンドを `docker compose` にパススルーしつつ、ポート割り当て・オーバーライド生成・プロキシ起動を行う
 - **`internal/compose/`** — `docker-compose.yml` のパース（`parse.go`）、`portless-docker.env.*` ラベルからの環境変数テンプレート解決（`envlabel.go`）、一時オーバーライドファイル生成（`override.go`）
 - **`internal/ports/`** — ポート割り当て。ランダム割り当てと FNV-1a ハッシュによる決定的割り当ての 2 戦略
-- **`internal/proxy/`** — `<service>.localhost:1355` へのリクエストを割り当てポートにルーティングするリバースプロキシ（デーモン管理含む）
+- **`internal/proxy/`** — `<service>.localtest.me:1355` へのリクエストを割り当てポートにルーティングするリバースプロキシ（デーモン管理含む）
 - **`internal/state/`** — `~/.portless-docker/state.json` でルートとプロキシ PID を管理。ファイルベースロックで排他制御
 - **`internal/ui/`** — lipgloss を使ったリッチなターミナル出力
 

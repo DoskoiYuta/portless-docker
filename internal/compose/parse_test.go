@@ -143,10 +143,10 @@ func TestBuildHostname(t *testing.T) {
 		project string
 		want    string
 	}{
-		{"frontend", "myproject", "frontend.myproject.localhost"},
-		{"api", "my-app", "api.my-app.localhost"},
-		{"web_app", "Project_A", "web-app.project-a.localhost"},
-		{"My_Service", "My_Project", "my-service.my-project.localhost"},
+		{"frontend", "myproject", "frontend.myproject.localtest.me"},
+		{"api", "my-app", "api.my-app.localtest.me"},
+		{"web_app", "Project_A", "web-app.project-a.localtest.me"},
+		{"My_Service", "My_Project", "my-service.my-project.localtest.me"},
 	}
 
 	for _, tt := range tests {

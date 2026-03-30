@@ -272,7 +272,7 @@ func ServiceSubdomain(name string) string {
 }
 
 // BuildHostname はサービス名とプロジェクト名からホスト名を生成する。
-// 形式: <service>.<project>.localhost
+// 形式: <service>.<project>.localtest.me
 func BuildHostname(serviceName, projectName string) string {
-	return ServiceSubdomain(serviceName) + "." + ServiceSubdomain(projectName) + ".localhost"
+	return ServiceSubdomain(serviceName) + "." + ServiceSubdomain(projectName) + ".localtest.me"
 }
